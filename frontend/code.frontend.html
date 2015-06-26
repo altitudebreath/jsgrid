@@ -1,0 +1,135 @@
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+<script src="//raw.githubusercontent.com/FezVrasta/bootstrap-material-design/master/dist/js/ripples.js"></script>
+<script src="//raw.githubusercontent.com/FezVrasta/bootstrap-material-design/master/dist/js/material.js"></script>
+
+<script>
+    console.log('--BEGIN--');  //convenient for finding the dynamic address of the client script by traces in console, do not remove please
+    
+    var CONFIG = <?!= JSON.stringify(Lib.config()) ?>;
+    
+    var cancel = false;
+    
+    function setBusy(isBusy){
+        if (isBusy){
+//            $('.control').hide();
+//            $('#busy').show();
+//            $('#cancel').show()
+        }else{
+//            $('.control').show();
+//            $('#busy').hide();
+        }
+    }
+    function onSuccess(result, params) {
+        if (! result) return; //this is a callback NOT from business logic endpoints, like UI dialog...
+        
+        if (result.done){
+            $('#message').text('DONE!');
+            setBusy(false);
+            setTimeout(function () {
+                $('#message').text('');
+            }, 5000)
+            
+        }else if (! cancel){
+            setTimeout(
+                    makeActionHandler(
+                            "mainReportRunnerAsyncClient", 
+                            {message: "Processing Task #" + result.taskId}  //next task id needed
+                    ), 
+                    2000
+            );            
+        }else{
+            cancel = false;
+            $('#message').text('Cancellation completed!');
+            setBusy(false);
+            setTimeout(function () {
+                $('#message').text('');
+            }, 5000)
+        }
+    }
+
+    function onError(error, params) {
+        $('#message').text('');
+        setBusy(false);
+        showError(error);
+    }
+
+    var runner = google.script.run
+            .withSuccessHandler(onSuccess)
+            .withFailureHandler(onError);
+
+    function processInput(inputConfig, params, what){
+        if(inputConfig){
+            var text = $('#' + what + ' input').val();
+            
+            if (typeof inputConfig.pattern.test !== 'function'){
+                inputConfig.pattern = new RegExp(inputConfig.pattern);
+            }
+            
+            if (inputConfig.pattern.test(text)) {
+                params.input = text;
+                return true;
+            } else {
+                showError({name: 'Data format', message: 'should be ' + inputConfig.errorMessage});
+                return false;
+            }
+        }
+        return true; //no input required
+    }
+    
+    function makeActionHandler(what, params, inputConfig) {
+        params = params || {};
+        return function () {
+            console.log("action handler called.");
+            var t = this;
+            var msg = $('#message');
+            
+            $('#error').remove();
+            msg.text('');
+            
+            if (processInput(inputConfig, params, what)){
+                msg.text(params.message ? params.message + '...' : 'Working...');
+                setBusy(true);
+                
+                runner.withUserObject(params)[what](params);
+            }
+            
+        }
+    }
+
+    function showError(error) {
+        var div = $('<div id="error" class="error errorMessage">' +
+        '<span class="errorMessage">' + (error.name ? (error.name + ' : <br />') : '') + error.message + 
+        (/Auth/i.test(error.message) ? 
+                '<span style="color:blue">You need to authorize API. ' +
+                'Just refresh the SideBar: Reporting Settings -> Refresh SideBar</span>' : 
+                '') + '</span>' +
+        //'<br /><span class="errorDetails">' + error.fileName + ' : ' + error.lineNumber/* + ' : ' + error.stack*/ + '</span>' +
+        '</div>');
+        $('#message').append(div);
+    }
+
+
+  /**
+   * Run initializations on web app load.
+   */
+  $(function() {
+    // Call the server here to retrieve any information needed to build the page.
+      $.material.init();
+
+//      $('#runMonthlyCustomReport button').click(makeActionHandler(
+//              'runMonthlyCustomReport', 
+//              {
+//                  message: INITIAL_MESSAGE,
+//              },
+//              CONFIG.VALIDATIONS.MONTHS_NUMBER
+//      ));
+      
+//      $('#cancel').click(function(){ 
+//          cancel = true;
+//          $('#message').text('Rest of tasks cancelled, current one is finishing...');
+//          $('#cancel').hide();
+//      });
+  });
+
+</script>

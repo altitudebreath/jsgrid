@@ -29,29 +29,31 @@ var Lib = (function(){
         return destination;
     };
     
-    //============================================================================================================
+//====================================================================================================
+//====================================================================================================
     
-    function Parameters(){
+    function Configurator(){
         this._instance = null;
     }
     
-    Parameters.prototype._getByType = function (value, atype, splitter) {
+    Configurator.prototype._getByType = function (value, atype, splitter) {
         var handlers = {
             'string': function(val){return val.toString();},
             'integer': function(val){return parseInt(val);},
             'float': function(val){return parseFloat(val);},
             'JSON': function(val){return JSON.parse(val.toString());},
             'date': function(val){return new Date(val);},
-            'list': function(val){return val.toString().split(splitter);}
+            'list': function(val){return val.toString().split(new RegExp('\\s*' + splitter + '\\s*'));},
+            'array': function(val){return val.toString().split(splitter);},
         }
         
         return handlers[atype](value);
     }
     
-    Parameters.prototype.get = function () {
-        var self = this;
-        if (self._instance) {
-            return self._instance;
+    Configurator.prototype.get = function () {
+        var t = this;
+        if (t._instance) {
+            return t._instance;
         } else {
             var ss = SpreadsheetApp.getById(CONSTANTS.ADMIN_SPREADSHEET_ID);
             var paramSheet = ss.getSheetByName(CONSTANTS.PARAMETERS_SHEET_NAME);
@@ -60,53 +62,150 @@ var Lib = (function(){
             for (var i = CONSTANTS.PARAM_ROWS_STARTS_FROM - 1; i < values.length; i++){
                 var row = values[i];
                 params[row[CONSTANTS.PARAM_NAME_POSITION - 1]] = 
-                    self._getByType(
+                    t._getByType(
                         row[CONSTANTS.PARAM_VALUE_POSITION - 1], 
                         row[CONSTANTS.PARAM_TYPE_POSITION - 1],
                         row[CONSTANTS.ITEMS_SPLITTER_POSITION - 1]
                     );
             }
-            self._instance = extend(params, CONSTANTS);
+            t._instance = extend({}, CONSTANTS, params); //CONSTANTS can be overridden then..., but tricky
             
-            return self._instance;
+            return t._instance;
         }
     };
     
-    //==============================================================================================================
+//====================================================================================================
+//====================================================================================================
     
     function Renderer(rootTemplate, contextName, context){
-        var self = this;
-        self._rootTemplate = rootTemplate || "index";
-        self._context = context;
-        self._contextName = contextName;
-        self._baseTemplate = HtmlService.createTemplateFromFile(self._rootTemplate);
+        var t = this;
+        t._rootTemplate = rootTemplate || "index";
+        t._context = context;
+        t._contextName = contextName;
+        t._baseTemplate = HtmlService.createTemplateFromFile(t._rootTemplate);
+    }
+
+    Renderer.prototype.renderAsRoot = function (pageName, extraContext) {
+        this._render(false, pageName, extraContext)
     }
     
-    Renderer.prototype.render = function (pageName, extraContext){
-        var self = this;
+    Renderer.prototype.render = function (pageName, extraContext) {
+        this._render(true, pageName, extraContext)
+    }
+    
+    Renderer.prototype._render = function (inheritFromRoot, pageName, extraContext){
+        var t = this;
         
         var viewTemplate = HtmlService.createTemplateFromFile(pageName);
         
-        viewTemplate[self._contextName] = extend({}, self._context, extraContext);
+        viewTemplate[t._contextName] = extend({}, t._context, extraContext);
         
-        //now, render our view template into the base with bounded context
-        self._baseTemplate.viewContent = 
-            viewTemplate.evaluate().getContent();
+        var template;
+        if (inheritFromRoot){
+            //now, render our view template into the base with bounded context
+            t._baseTemplate.viewContent = 
+                viewTemplate.evaluate().getContent();
+            template = t._baseTemplate;            
+        }else{
+            template = viewTemplate;
+        }
         
         // Build and return HTML in IFRAME sandbox mode.
-        return self._baseTemplate.evaluate()
+        return template.evaluate()
             .setTitle('Web App Experiment')
             .setSandboxMode(HtmlService.SandboxMode.IFRAME);
         
     }
     
+    
+//====================================================================================================
+//====================================================================================================
+    function Page(urlParameters, defaultPage) {
+        var t = this;
+        t._url = ScriptApp.getService().getUrl();
+        t._urlPar = urlParameters.parameters;
+        t._defaultPageName = defaultPage;
+        t._pageName = (t._urlPar.page || '').replace(/^\//, '');
+
+        if (t._pageName === ''){
+            t._pageName = t._defaultPageName;
+        }
+
+        t._path = t._pageName.split('/');
+        
+        t._templateName = t._pageName.replace(/\//g, '_');
+    }
+
+    Page.prototype.isValid = function () {
+        var t = this;
+        return t._path.length >= 2 && t._path.length < 10; //10 is some reasonable limit of nesting
+    }
+
+    Page.prototype.getUrl = function (templateName) { 
+        var t = this;
+        return t._url + '?page=' + 
+            (templateName.replace(/_/g, '/') || t._pageName); 
+    }
+
+    Page.prototype.getName = function () {
+        return this._pageName;
+    }
+
+    Page.prototype.getTemplateName = function () {
+        return this._templateName;
+    }
+
+    Page.prototype.getPrefix = function () {
+        return this._path[0];
+    }
+//====================================================================================================
+//====================================================================================================
+
+    function Auth(confInstance){
+        var t = this;
+        t._runningUser = Session.getActiveUser().getEmail();
+        t._params = confInstance;
+    }
+    
+    Auth.prototype.validate = function (userEmail) {
+        var t = this;
+        
+        var emailToCheck = userEmail ? userEmail : t._runningUser;
+        
+        //just need to check if user has access at all (is in ALL group)
+        return t._params['roles.ALL'].indexOf(emailToCheck) !== -1;
+
+    }    
+    
+    Auth.prototype.validateRole = function (page, userEmail) {
+        var t = this;
+        
+        var emailToCheck = userEmail ? userEmail : t._runningUser;
+        
+        //need to check permissions to this specific page
+        for (var role in CONSTANTS.ROLE) {
+            if (t._params['roles.' + role].indexOf(emailToCheck) !== -1 &&
+                CONSTANTS.ROLE[role].allowedPrefixes.indexOf(page.getPrefix()) !== -1 
+            ){
+                return true;
+            }
+        }
+        
+        return false;
+    }    
+    
+//====================================================================================================
+//====================================================================================================
     return {
         stub: stub,
         isArray: isArray,
         isObject: isObject,
         extend: extend,
-        Parameters: Parameters,
+        Configurator: Configurator,
         Renderer: Renderer,
+        Auth: Auth,
+        Page: Page,
+        parameters: new Configurator(),
         
     };
 })();    

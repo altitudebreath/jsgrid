@@ -1,18 +1,34 @@
 //CONSTANTS needs to be available where spreadsheet is not accessible (yet)
 //cannot be moved to sheet-based parameters
 var CONSTANTS = {
-    //-------------------- Change this per each client! ------------------------------------
+    //======================================================================================
+    //--------------------------------- Obligatory  CHANGE ---------------------------------
+    //======================================================================================
+    
     ADMIN_SPREADSHEET_ID: "1BxV-8zNRvAQmx1Kx-Eimn77lsqdkZQdtkfTdgVyKhB0",
-    //-------------------------------------------------------------------------------------
+    
+    //======================================================================================
+    //------------------------------------- end  --------------------------------------------
+    //======================================================================================
     PARAMETERS_SHEET_NAME: 'PARAMS',
     //Indexes below counting from 1
     PARAM_NAME_POSITION: 1,
     PARAM_TYPE_POSITION: 2,
     ITEMS_SPLITTER_POSITION: 3,
-    PARAM_VALUE_POSITION: 4,
-    PARAM_ROWS_STARTS_FROM: 5
+    PARAM_VALUE_POSITION: 5,
+    PARAM_ROWS_STARTS_FROM: 5,
     
+    ROLE:{
+        ALL: {
+            allowedPrefixes: ['service','app']
+        },
+        admin: {
+            allowedPrefixes: ['admin','service','app']
+        },
+        staff:{
+            allowedPrefixes: ['service','app']
+        },
+    }
     //TRIGGER_CALL_INTERVAL: 60 * 1000,
 }
 
-var parameters = new Lib.Parameters(); 

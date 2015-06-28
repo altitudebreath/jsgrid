@@ -5,30 +5,47 @@ function doGet(e) {
 
     // Simple router
     // process a page from parameters
-    var conf = parameters.get();
+    var conf = Lib.parameters.get();
     
-    var P = e.parameter;
+    var page = new Lib.Page(e, 'app/home');
+    
+    var auth = new Lib.Auth(conf);
     
     var r = new Lib.Renderer("index", 'C', { //base context
-        getUrl: function(pageName){return ""},
-        isMe: function(pageName){ return pageName === this.pageName;}
+        getUrl: function (templateName) { 
+            return page.getUrl(templateName); 
+        },
+        isMe: function(templateName){ 
+            return templateName === this.templateName;
+        }
+        
     });
     
-    if (P.page) {
-        var path = P.page.replace(/^\//, '');
-        var parts = path.split('/');
-        if (parts.length >= 2){
-            var pageName = path.replace(/\//g, '-');
-            try{
-                return r.render(pageName, {});
-            }catch(e){
-                //just switch to rendering error page
-            }
-
+    //check for strangers
+    if (! auth.validate()){
+        //get back with raw page, not rendering our styles and components for strangers
+        return r.renderAsRoot('service_access-denied')
+    }
+    
+    if (page.isValid()){
+        //this is ours user, but let's check if he has permissions for this page...
+        if (! auth.validateRole(page)){
+            //get back with gentle page, properly rendering Navigation Bar etc 
+            // to allows user navigate to other components
+            return r.render('service_no-permissions')
+        }
+        
+        //page template name still might be wrongly specified in, we use try{} block
+        try{
+            return r.render(page.getName(), {
+                templateName: page.getTemplateName()
+            });
+        }catch(e){
+            //just end up with the 404 error page below, if invalid URL
         }
     }
     
-    return r.render('service-error');
+    return r.render('service_404');
     
 }
 

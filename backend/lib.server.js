@@ -85,9 +85,18 @@ var Lib = (function(){
     
 //====================================================================================================
 //====================================================================================================
+
+    function errorRender(templateName, exception) {
+        var template = HtmlService.createTemplateFromFile(templateName);
+        template.exception = exception;
+        return template.evaluate()
+            .setTitle('Error')
+            .setSandboxMode(HtmlService.SandboxMode.IFRAME);
+    }
     
-    function Renderer(rootTemplate, contextName, context){
+    function Renderer(appTitle, rootTemplate, contextName, context){
         var t = this;
+        t._appTitle = appTitle;
         t._rootTemplate = rootTemplate || "index";
         //root context, is applied to all templates before other contexts when rendering
         t._context = context;
@@ -128,7 +137,7 @@ var Lib = (function(){
         
         // Build and return HTML in IFRAME sandbox mode.
         return template.evaluate()
-            .setTitle('Web App Experiment')
+            .setTitle(t._appTitle)
             .setSandboxMode(HtmlService.SandboxMode.IFRAME);
         
     }
@@ -238,7 +247,8 @@ var Lib = (function(){
         Auth: Auth,
         Page: Page,
         parameters: new Configurator(),
-        log: log
+        log: log,
+        errorRender: errorRender,
         
     };
 })();    

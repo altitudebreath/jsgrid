@@ -12,6 +12,8 @@ function doGet(e) {
     var auth = new Lib.Auth(conf);
     
     var r = new Lib.Renderer("index", 'C', { //base context
+        page: page.getName(),
+        
         getUrl: function (templateName) { 
             return page.getUrl(templateName); 
         },
@@ -32,9 +34,9 @@ function doGet(e) {
         if (! auth.validateRole(page)){
             //get back with gentle page, properly rendering Navigation Bar etc 
             // to allows user navigate to other components
-            return r.render('service_no-permissions')
+            return r.render('service_no-permissions');
         }
-        
+        Lib.log('validated')
         //page template name still might be wrongly specified in, we use try{} block
         try{
             return r.render(page.getName(), {

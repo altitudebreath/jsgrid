@@ -8,7 +8,16 @@ var Lib = (function(){
     function isObject(obj) {
         return Object.prototype.toString.call(obj) === '[object Object]';
     }
-    
+
+    function log(msg, data) {
+        if (data) {
+            var d = {};
+            d[msg] = data;
+            Logger.log(d);
+        }else{
+            Logger.log(msg);
+        }
+    }
     
     /**
      * Extends or overwrites
@@ -55,7 +64,7 @@ var Lib = (function(){
         if (t._instance) {
             return t._instance;
         } else {
-            var ss = SpreadsheetApp.getById(CONSTANTS.ADMIN_SPREADSHEET_ID);
+            var ss = SpreadsheetApp.openById(CONSTANTS.ADMIN_SPREADSHEET_ID);
             var paramSheet = ss.getSheetByName(CONSTANTS.PARAMETERS_SHEET_NAME);
             var values = paramSheet.getDataRange().getValues();
             var params = {};
@@ -68,7 +77,7 @@ var Lib = (function(){
                         row[CONSTANTS.ITEMS_SPLITTER_POSITION - 1]
                     );
             }
-            t._instance = extend({}, CONSTANTS, params); //CONSTANTS can be overridden then..., but tricky
+            t._instance = params;//extend({}, params, CONSTANTS); 
             
             return t._instance;
         }
@@ -83,14 +92,15 @@ var Lib = (function(){
         t._context = context;
         t._contextName = contextName;
         t._baseTemplate = HtmlService.createTemplateFromFile(t._rootTemplate);
+        t._baseTemplate[t._contextName] = t._context;
     }
 
     Renderer.prototype.renderAsRoot = function (pageName, extraContext) {
-        this._render(false, pageName, extraContext)
+        return this._render(false, pageName, extraContext)
     }
     
     Renderer.prototype.render = function (pageName, extraContext) {
-        this._render(true, pageName, extraContext)
+        return this._render(true, pageName, extraContext)
     }
     
     Renderer.prototype._render = function (inheritFromRoot, pageName, extraContext){
@@ -123,14 +133,17 @@ var Lib = (function(){
     function Page(urlParameters, defaultPage) {
         var t = this;
         t._url = ScriptApp.getService().getUrl();
-        t._urlPar = urlParameters.parameters;
+        t._valid = null;
+        t._urlPar = urlParameters.parameter;
         t._defaultPageName = defaultPage;
-        t._pageName = (t._urlPar.page || '').replace(/^\//, '');
+        t._pageName = (t._urlPar.page || '').toString().replace(/^\//, '');
 
         if (t._pageName === ''){
             t._pageName = t._defaultPageName;
         }
-
+        
+        //if _pageName was not '' and it is incorrect, e.g. blalba/strange*page
+        //it remais such. Use isValid() to validate
         t._path = t._pageName.split('/');
         
         t._templateName = t._pageName.replace(/\//g, '_');
@@ -138,7 +151,14 @@ var Lib = (function(){
 
     Page.prototype.isValid = function () {
         var t = this;
-        return t._path.length >= 2 && t._path.length < 10; //10 is some reasonable limit of nesting
+        //memorize if already validated
+        if(t._valid === null){
+            t._valid = 
+                (t._path.length >= 2) && 
+                (t._path.length < 10) && //10 is some reasonable limit of nesting
+                /\w+/.test(t._pageName.replace(/\//g, ''))
+        }
+        return t._valid;
     }
 
     Page.prototype.getUrl = function (templateName) { 
@@ -173,7 +193,7 @@ var Lib = (function(){
         var emailToCheck = userEmail ? userEmail : t._runningUser;
         
         //just need to check if user has access at all (is in ALL group)
-        return t._params['roles.ALL'].indexOf(emailToCheck) !== -1;
+        return t._params['role.' + CONSTANTS.ROLE_ALL].indexOf(emailToCheck) !== -1;
 
     }    
     
@@ -183,8 +203,14 @@ var Lib = (function(){
         var emailToCheck = userEmail ? userEmail : t._runningUser;
         
         //need to check permissions to this specific page
+        //return after having found the first role permitting this page
         for (var role in CONSTANTS.ROLE) {
-            if (t._params['roles.' + role].indexOf(emailToCheck) !== -1 &&
+            //log('role', role);
+            //log('emailToCheck', emailToCheck);
+            //log("t._params['role.' + role] = ", t._params['role.' + role]);
+            //log('CONSTANTS.ROLE[role].allowedPrefixes = ', CONSTANTS.ROLE[role].allowedPrefixes);
+            //log('page.getPrefix()', page.getPrefix());
+            if (t._params['role.' + role].indexOf(emailToCheck) !== -1 &&
                 CONSTANTS.ROLE[role].allowedPrefixes.indexOf(page.getPrefix()) !== -1 
             ){
                 return true;
@@ -206,6 +232,7 @@ var Lib = (function(){
         Auth: Auth,
         Page: Page,
         parameters: new Configurator(),
+        log: log
         
     };
 })();    

@@ -18,14 +18,15 @@ var CONSTANTS = {
     PARAM_VALUE_POSITION: 5,
     PARAM_ROWS_STARTS_FROM: 5,
     
+    ROLE_ALL: 'ALL',
+    
     ROLE:{
-        ALL: {
-            allowedPrefixes: ['service','app']
-        },
         admin: {
+            name: 'admin',
             allowedPrefixes: ['admin','service','app']
         },
         staff:{
+            name:'staff',
             allowedPrefixes: ['service','app']
         },
     }

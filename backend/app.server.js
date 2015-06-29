@@ -53,7 +53,9 @@ function doGet(e) {
         });
     
     }catch(e){
-        return Lib.errorRender('error', e);
+        var tr = Lib.trace(e);
+        Logger.log(tr);
+        return Lib.errorRender('error', DEBUG ? tr.replace(/\n/g, '<br />') : e);
     }   
 }
 

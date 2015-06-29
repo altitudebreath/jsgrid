@@ -2,9 +2,9 @@
 <body>
     <h1 style="color:red">Something went wrong...</h1>
     <p>
-        Just go to <a href="<?= ScriptApp.getService().getUrl() ?>"><strong>Home page</strong></a>
+        Just go to <a href="<?!= ScriptApp.getService().getUrl() ?>"><strong>Home page</strong></a>
     </p>
     <h3>Details:</h3>
-    <p><?= exception ?></p>
+    <p><?!= exception ?></p>
 </body>
 </html>

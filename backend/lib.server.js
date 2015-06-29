@@ -18,6 +18,14 @@ var Lib = (function(){
             Logger.log(msg);
         }
     }
+
+    function trace(err) {
+        var errInfo = "ERROR:\n";
+        for (var prop in err) {
+            errInfo += prop + ": " + err[prop] + "\n";
+        }
+        return errInfo;
+    }
     
     /**
      * Extends or overwrites
@@ -249,6 +257,7 @@ var Lib = (function(){
         parameters: new Configurator(),
         log: log,
         errorRender: errorRender,
+        trace: trace,
         
     };
 })();    

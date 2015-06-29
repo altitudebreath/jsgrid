@@ -89,32 +89,38 @@ var Lib = (function(){
     function Renderer(rootTemplate, contextName, context){
         var t = this;
         t._rootTemplate = rootTemplate || "index";
+        //root context, is applied to all templates before other contexts when rendering
         t._context = context;
         t._contextName = contextName;
         t._baseTemplate = HtmlService.createTemplateFromFile(t._rootTemplate);
-        t._baseTemplate[t._contextName] = t._context;
     }
 
-    Renderer.prototype.renderAsRoot = function (pageName, extraContext) {
-        return this._render(false, pageName, extraContext)
+    Renderer.prototype.renderAsRoot = function (templateName, pageContext) {
+        return this._render(false, templateName, pageContext)
     }
     
-    Renderer.prototype.render = function (pageName, extraContext) {
-        return this._render(true, pageName, extraContext)
+    Renderer.prototype.render = function (templateName, pageContext) {
+        return this._render(true, templateName, pageContext)
     }
     
-    Renderer.prototype._render = function (inheritFromRoot, pageName, extraContext){
+    Renderer.prototype._render = function (inheritFromRoot, templateName, pageContext){
         var t = this;
         
-        var viewTemplate = HtmlService.createTemplateFromFile(pageName);
+        var viewTemplate = HtmlService.createTemplateFromFile(templateName);
         
-        viewTemplate[t._contextName] = extend({}, t._context, extraContext);
+        var currentContext = extend({}, t._context, pageContext);
+        
+        viewTemplate[t._contextName] = currentContext;
         
         var template;
         if (inheritFromRoot){
+            //root template should update its current context too
+            t._baseTemplate[t._contextName] = currentContext;
+
             //now, render our view template into the base with bounded context
             t._baseTemplate.viewContent = 
                 viewTemplate.evaluate().getContent();
+            
             template = t._baseTemplate;            
         }else{
             template = viewTemplate;

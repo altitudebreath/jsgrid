@@ -1,33 +1,31 @@
 
 function doGet(e) {
-    //index.html - is a base template
-    //all the rest templates are included in it
 
-    // Simple router
-    // process a page from parameters
     var conf = Lib.parameters.get();
     
-    var page = new Lib.Page(e, 'app/home');
-    
-    var auth = new Lib.Auth(conf);
-    
     var r = new Lib.Renderer("index", 'C', { //base context
-        page: page.getName(),
+        getName: function () {
+            return this.page.getName();
+        },
         
         getUrl: function (templateName) { 
-            return page.getUrl(templateName); 
+            return this.page.getUrl(templateName); 
         },
         isMe: function(templateName){ 
-            return templateName === this.templateName;
+            return templateName === this.page.getTemplateName();
         }
         
     });
+    
+    var auth = new Lib.Auth(conf);
     
     //check for strangers
     if (! auth.validate()){
         //get back with raw page, not rendering our styles and components for strangers
         return r.renderAsRoot('service_access-denied')
     }
+    
+    var page = new Lib.Page(e, 'app/home');
     
     if (page.isValid()){
         //this is ours user, but let's check if he has permissions for this page...
@@ -39,15 +37,18 @@ function doGet(e) {
         Lib.log('validated')
         //page template name still might be wrongly specified in, we use try{} block
         try{
-            return r.render(page.getName(), {
-                templateName: page.getTemplateName()
+            return r.render(page.getTemplateName(), {
+                page: page
             });
         }catch(e){
+            Lib.log(e);
             //just end up with the 404 error page below, if invalid URL
         }
     }
     
-    return r.render('service_404');
+    return r.render('service_404', {
+        page: page
+    });
     
 }
 

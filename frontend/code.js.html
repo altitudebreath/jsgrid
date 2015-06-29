@@ -112,7 +112,7 @@
      * Run initializations on web app load.
      */
     $(function () {
-        $('a').on('click', function (event) {
+        $('a[href^="https://script.google.com/a/macros"]').on('click', function (event) {
             event.preventDefault();
             window.top.location.href = $(this).attr('href');
         });

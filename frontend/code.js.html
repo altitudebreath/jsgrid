@@ -112,6 +112,11 @@
    * Run initializations on web app load.
    */
   $(function() {
+      $('a').on('click', function (event) {
+          event.preventDefault();
+          window.top.location.href = $(this).attr('href');
+      });
+
     // Call the server here to retrieve any information needed to build the page.
       $.material.init();
 

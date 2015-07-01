@@ -46,25 +46,36 @@ var Lib = (function(){
         return destination;
     };
     
+    
+    function ssObject(spreadsheet) {
+        return (typeof spreadsheet === "string" ? SpreadsheetApp.openById(spreadsheet) : spreadsheet);
+    }
+    
 //====================================================================================================
 //====================================================================================================
     
     function Configurator(){
-        this._instance = null;
-    }
-    
-    Configurator.prototype._getByType = function (value, atype, splitter) {
-        var handlers = {
+        var t = this;
+        t._instance = null;
+        t._handlers = {
             'string': function(val){return val.toString();},
             'integer': function(val){return parseInt(val);},
             'float': function(val){return parseFloat(val);},
             'JSON': function(val){return JSON.parse(val.toString());},
             'date': function(val){return new Date(val);},
-            'list': function(val){return val.toString().split(new RegExp('\\s*' + splitter + '\\s*'));},
-            'array': function(val){return val.toString().split(splitter);},
+            'list': function(val, splitter){
+                return val.toString()
+                    .split(new RegExp('\\s*' + splitter + '\\s*'));
+            },
+            'array': function(val, terminator, row){
+                return row.slice(0, row.indexOf(terminator || ""));
+            },
         }
         
-        return handlers[atype](value);
+    }
+    
+    Configurator.prototype._getByType = function (row, value, atype, splitterOrTerminator) {
+        return this._handlers[atype](value, splitterOrTerminator, row);
     }
     
     Configurator.prototype.get = function () {
@@ -80,6 +91,7 @@ var Lib = (function(){
                 var row = values[i];
                 params[row[CONSTANTS.PARAM_NAME_POSITION - 1]] = 
                     t._getByType(
+                        row,
                         row[CONSTANTS.PARAM_VALUE_POSITION - 1], 
                         row[CONSTANTS.PARAM_TYPE_POSITION - 1],
                         row[CONSTANTS.ITEMS_SPLITTER_POSITION - 1]
@@ -102,6 +114,9 @@ var Lib = (function(){
             .setSandboxMode(HtmlService.SandboxMode.IFRAME);
     }
     
+//====================================================================================================
+//====================================================================================================
+
     function Renderer(appTitle, rootTemplate, contextName, context){
         var t = this;
         t._appTitle = appTitle;
@@ -172,6 +187,11 @@ var Lib = (function(){
         t._templateName = t._pageName.replace(/\//g, '_');
     }
 
+    Page.prototype.getParameters = function () {
+        var t = this;
+        return t._urlPar;
+    }
+    
     Page.prototype.isValid = function () {
         var t = this;
         //memorize if already validated
@@ -186,6 +206,7 @@ var Lib = (function(){
 
     Page.prototype.getUrl = function (templateName) { 
         var t = this;
+        if (! templateName) return t._url;
         return t._url + '?page=' + 
             (templateName.replace(/_/g, '/') || t._pageName); 
     }
@@ -194,12 +215,36 @@ var Lib = (function(){
         return this._pageName;
     }
 
-    Page.prototype.getTemplateName = function () {
+    Page.prototype.getActionName = function () {
         return this._templateName;
     }
 
     Page.prototype.getPrefix = function () {
         return this._path[0];
+    }
+
+//====================================================================================================
+//====================================================================================================
+    function runControllerFor(conf, page) {
+        var pageName = page.getName();
+        //this is also default template file name (without extension)
+        var actionName = page.getActionName(); 
+        if(! (pageName in controllers)){
+            pageName = controllers.defaultController;
+        }
+        
+        //pick up a controller
+        var data = (controllers[pageName] || 
+                    controllers.defaultController)(conf, page, actionName);
+        
+        if (!data.template) data.template = actionName;
+        if (! data.context) data.context = {};
+        
+        //page always should be in the context
+        data.context.page = page; 
+        data.context.conf = conf; 
+        
+        return data;
     }
 //====================================================================================================
 //====================================================================================================
@@ -208,6 +253,10 @@ var Lib = (function(){
         var t = this;
         t._runningUser = Session.getActiveUser().getEmail();
         t._params = confInstance;
+    }
+
+    Auth.prototype.getEmail = function () {
+        return this._runningUser;
     }
     
     Auth.prototype.validate = function (userEmail) {
@@ -241,8 +290,89 @@ var Lib = (function(){
         }
         
         return false;
-    }    
+    }
     
+    
+//====================================================================================================
+//====================================================================================================
+    function Importer(schema, options) {
+        var t = this;
+        t._options = options || {};
+        t._delimiter = options.delimiter || ',';  //needed for CSV mainly
+        t._ss = t._options.spreadsheet ? ssObject(spreadsheet) : null;
+        t._schema = [];
+        for (var i = 0; i < t._schema.length; i++) {
+            t._schema.push(schema[i].toString().trim().toLowerCase());
+        }
+    }
+
+    Importer.prototype._validateFields = function (fields) {
+        var t = this;
+        var realFieldsOrder = [];
+        var newFields = [];
+        for (var i = 0; i < fields.length; i++) {
+            newFields.push(fields[i].toString().trim().toLowerCase());
+        }
+        for (i = 0; i < t._schema.length; i++) {
+            var index = newFields.indexOf(t._schema[i]);
+            if (index === -1){
+                return null; //invalid schema!
+            }
+            realFieldsOrder.push(index);
+        }
+        return realFieldsOrder;
+    }
+
+    Importer.prototype._rearrange = function (values) {
+        var t = this, row, properRow,
+            header = values[0];
+        
+        var valuesAfterSchema = [];
+        
+        var order = t._validateFields(values[0]);
+        if (order === null) throw Error("Invalid order");
+
+        for (var i = 1; i < values.length; i++) {
+            properRow = new Array(header.length);
+            row = values[i];
+            for (var j = 0; j < header.length; j++) {
+                properRow[j] = row[order[j]];
+            }
+            valuesAfterSchema.push(properRow);
+        }
+        
+        return valuesAfterSchema;
+    }
+    
+    Importer.prototype.getFromRange = function (rangeOrName, spreadsheet) {
+        var t = this;
+        if (typeof rangeOrName === 'string'){
+            rangeOrName = ( ssObject(spreadsheet) || t._ss).getRangeByName(rangeOrName);
+        }
+        return t._rearrange(rangeOrName.getValues());
+    }
+    
+    Importer.prototype.getFromCSV = function (CSV, delimiter) {
+        var t = this;
+        var rows = CSV.split(/\n/);
+        var values = [];
+        for (var i = 0; i < rows.length; i++) {
+            values.push(rows[i].split(delimiter || t._delimiter));
+        }
+        return t._rearrange(values);
+    }
+    
+//====================================================================================================
+//====================================================================================================
+
+    function API(endpoint) {
+        var t = this;
+        
+    }
+
+    API.prototype.get = function () {
+        var t = this;
+    }
 //====================================================================================================
 //====================================================================================================
     return {
@@ -254,10 +384,10 @@ var Lib = (function(){
         Renderer: Renderer,
         Auth: Auth,
         Page: Page,
-        parameters: new Configurator(),
         log: log,
         errorRender: errorRender,
         trace: trace,
+        runControllerFor: runControllerFor,
         
     };
 })();    

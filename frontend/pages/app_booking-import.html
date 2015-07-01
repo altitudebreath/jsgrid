@@ -1,0 +1,107 @@
+<h1>Import Booking data</h1>
+
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">Header Format !</h3>
+    </div>
+    <div class="panel-body">
+        You should have the data header with the following field names: <?= C.fields ?><br />
+        Data columns should correspond header names.
+        Data header is the first text row for a CSV, or the top cells row in a range or a sheet
+    </div>
+</div>
+
+<form class="form-horizontal">
+    <fieldset>
+        <legend>Import from a Google Spreadsheet Named Range</legend>
+        <div class="form-group">
+            <label for= "inputSpreadsheetId-NR" class="col-lg-2 control-label">Spreadsheet ID</label>
+            <div class="col-lg-10">
+                <input type="text" class="form-control floating-label" 
+                       id="inputSpreadsheetId-NR" placeholder="Input your Spreadsheet ID, you can find it in URL" />
+            </div>
+        </div>
+        <div class="form-group">
+            <label for= "inputRangeName" class="col-lg-2 control-label">Range Name</label>
+            <div class="col-lg-10">
+                <input type="text" class="form-control floating-label" 
+                       id="inputRangeName" placeholder="Input a Range Name (Menu -> Data -> Named Ranges)" />
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-lg-10 col-lg-offset-2">
+                <button class="btn btn-default btn-raised">Clear</button>
+                <button type="submit" class="btn btn-primary btn-raised">Submit</button>
+            </div>
+        </div>
+    </fieldset>
+</form>
+
+<form class="form-horizontal">
+    <fieldset>
+        <legend>Import from a Google Sheet (data occupy all sheet)</legend>
+        <div class="form-group">
+            <label for= "inputSpreadsheetId-S" class="col-lg-2 control-label">Spreadsheet ID</label>
+            <div class="col-lg-10">
+                <input type="text" class="form-control floating-label" 
+                       id="inputSpreadsheetId-S" placeholder="Input your Spreadsheet ID, you can find it in URL" />
+            </div>
+        </div>
+        <div class="form-group">
+            <label for= "inputSheetName" class="col-lg-2 control-label">Sheet Name</label>
+            <div class="col-lg-10">
+                <input type="text" class="form-control floating-label" 
+                       id="inputSheetName" placeholder="Input Sheet Name" />
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-lg-10 col-lg-offset-2">
+                <button class="btn btn-default btn-raised">Clear</button>
+                <button type="submit" class="btn btn-primary btn-raised">Submit</button>
+            </div>
+        </div>
+    </fieldset>
+</form>    
+
+<form class="form-horizontal">
+    <fieldset>
+        <legend>Import from CSV</legend>
+        <div class="form-group">
+            <label for="textArea" class="col-lg-2 control-label">CSV contents</label>
+            <div class="col-lg-10">
+                <textarea class="form-control" rows="3" id="textArea"></textarea>
+                <span class="help-block">Copy-Paste CSV file contents here</span>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-lg-2 control-label">Choose Fields Delimiter</label>
+            <div class="col-lg-10">
+                <div class="radio radio-primary">
+                    <label>
+                        <input type="radio" name="optionsRadios" id="delimiterTab" value="tab" checked="">
+                        Tab
+                    </label>
+                </div>
+                <div class="radio radio-primary">
+                    <label>
+                        <input type="radio" name="optionsRadios" id="delimiterComma" value="comma">
+                        Comma
+                    </label>
+                </div>
+                <div class="radio radio-primary">
+                    <label>
+                        <input type="radio" name="optionsRadios" value="custom">
+                        Custom <br /><input type="text" class="form-control floating-label" 
+                                               id="delimiterCustom" placeholder="Custom delimiter here" />
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-lg-10 col-lg-offset-2">
+                <button class="btn btn-default btn-raised">Clear</button>
+                <button type="submit" class="btn btn-primary btn-raised">Submit</button>
+            </div>
+        </div>
+    </fieldset>
+</form>

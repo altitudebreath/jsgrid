@@ -1,25 +1,29 @@
 
 function doGet(e) {
     try {
-        var conf = Lib.parameters.get();
+        var conf = (new Lib.Configurator).get();
 
+        var auth = new Lib.Auth(conf);
+        
         var r = new Lib.Renderer(conf.app_title, "index", 'C', { //base context
             title: conf.app_title,
+            
+            auth: auth,
             
             getName: function () {
                 return this.page.getName();
             },
 
-            getUrl: function (templateName) {
-                return this.page.getUrl(templateName);
+            getUrl: function (actionName) {
+                return this.page.getUrl(actionName);
             },
-            isMe: function (templateName) {
-                return templateName === this.page.getTemplateName();
+            
+            isMe: function (actionName, textOnSuccess) {
+                var res = actionName === this.page.getActionName();
+                return textOnSuccess ? (res ? textOnSuccess : '') : res;
             }
 
         });
-
-        var auth = new Lib.Auth(conf);
 
         //check for strangers
         if (!auth.validate()) {
@@ -27,7 +31,7 @@ function doGet(e) {
             return r.renderAsRoot('service_access-denied')
         }
 
-        var page = new Lib.Page(e, 'app/home');
+        var page = new Lib.Page(e, conf.default_page);
 
         if (page.isValid()) {
             //this is ours user, but let's check if he has permissions for this page...
@@ -38,14 +42,12 @@ function doGet(e) {
                             page: page
                 });
             }
-            Lib.log('validated')
             //page template name still might be wrongly specified in, we use try{} block
             try {
-                return r.render(page.getTemplateName(), {
-                    page: page
-                });
+                var data = Lib.runControllerFor(conf, page);
+                return r.render(data.template, data.context);
             } catch (e) {
-                Lib.log(e);
+                Lib.log(Lib.trace(e));
                 //just end up with the 404 error page below, if invalid URL
             }
         }
@@ -62,5 +64,6 @@ function doGet(e) {
 }
 
 function doPost(e){
-    
+    //dummy stub for now
+    return doGet(e);
 }

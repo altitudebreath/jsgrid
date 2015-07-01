@@ -63,6 +63,15 @@ function doGet(e) {
     }   
 }
 
+function runAction(entity, operation, actionParams){
+    try {
+        var func = API[entity][operation];
+    }catch(e){
+        throw Error("Wrong Entity or Operation: " + entity + ', ' + operation);
+    }
+    return func(actionParams.data);
+}
+
 function doPost(e){
     //dummy stub for now
     return doGet(e);

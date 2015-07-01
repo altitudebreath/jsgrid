@@ -46,7 +46,32 @@ var Lib = (function(){
         return destination;
     };
     
-    
+    function getSSAndSheet(ss, sheetOrName, createSheetIfMissing) {
+        ss = ss || SpreadsheetApp.getActiveSpreadsheet();
+        if (typeof ss === 'string'){
+            ss = SpreadsheetApp.openById(ss);
+        }
+        var sheet;
+        if (sheetOrName){
+            if (typeof sheetOrName.getName === "function"){
+                sheet = sheetOrName;
+            }else{
+                sheet = ss.getSheetByName(sheetOrName);
+                if (sheet === null && createSheetIfMissing) {
+                    sheet = ss.insertSheet(sheetOrName, 0);
+                }
+            }
+        } else {
+            sheet =  ss.getActiveSheet();
+        }
+        return {ss: ss, sheet:sheet};
+    }
+
+    //function getNumericRange(sheet, rangeA1) {
+    //    
+    //    return sheet.getRange()
+    //}
+    //
     function ssObject(spreadsheet) {
         return (typeof spreadsheet === "string" ? SpreadsheetApp.openById(spreadsheet) : spreadsheet);
     }
@@ -163,6 +188,27 @@ var Lib = (function(){
             .setTitle(t._appTitle)
             .setSandboxMode(HtmlService.SandboxMode.IFRAME);
         
+    }
+    
+    
+//====================================================================================================
+//====================================================================================================
+
+    function DBWriter(spreadsheet, sheet, rangeA1) {
+        var t = this;
+        var ssAndS = getSSAndSheet(spreadsheet, sheet);
+        t._ss = ssAndS.ss;
+        t._sheet = ssAndS.sheet;
+        if (rangeA1){
+            t._range = t._sheet.getRange(rangeA1); //getNumericRange(t._sheet, rangeName)
+        } 
+    }
+
+    DBWriter.prototype.rewrite = function (data, range) {
+        var t = this;
+        var r = (range || t._range);
+        r.clearContent();
+        r.setValues(data);
     }
     
     

@@ -1,7 +1,6 @@
-
 function doGet(e) {
     try {
-        var conf = (new Lib.Configurator).get();
+        var conf = configurator.get();
 
         var auth = new Lib.Auth(conf);
         
@@ -64,12 +63,13 @@ function doGet(e) {
 }
 
 function runAction(entity, operation, actionParams){
+    var conf = configurator.get();
     try {
         var func = API[entity][operation];
     }catch(e){
         throw Error("Wrong Entity or Operation: " + entity + ', ' + operation);
     }
-    return func(actionParams.data);
+    return func(actionParams, conf);
 }
 
 function doPost(e){

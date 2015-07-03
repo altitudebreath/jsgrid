@@ -46,36 +46,83 @@ var Lib = (function(){
         return destination;
     };
     
-    function getSSAndSheet(ss, sheetOrName, createSheetIfMissing) {
-        ss = ss || SpreadsheetApp.getActiveSpreadsheet();
-        if (typeof ss === 'string'){
-            ss = SpreadsheetApp.openById(ss);
+    
+    function columnToLetter(column) {
+        if (typeof column === "string") return column;
+        
+        var temp, letter = '';
+        while (column > 0) {
+            temp = (column - 1) % 26;
+            letter = String.fromCharCode(temp + 65) + letter;
+            column = (column - temp - 1) / 26;
         }
-        var sheet;
-        if (sheetOrName){
-            if (typeof sheetOrName.getName === "function"){
-                sheet = sheetOrName;
-            }else{
-                sheet = ss.getSheetByName(sheetOrName);
-                if (sheet === null && createSheetIfMissing) {
-                    sheet = ss.insertSheet(sheetOrName, 0);
+        return letter;
+    }
+
+    function letterToColumn(letter) {
+        if (typeof letter === "number") return letter;
+        
+        var column = 0, length = letter.length;
+        for (var i = 0; i < length; i++) {
+            column += (letter.charCodeAt(i) - 64) * Math.pow(26, length - i - 1);
+        }
+        return column;
+    }
+    
+    function appendRows(sheet, dataOrRowsNumber, optStartColumn, columnNameToScanForEnd) {
+        var max_rows = sheet.getMaxRows();
+        var last_row = 1;
+        if (columnNameToScanForEnd){
+            var values  = sheet.getRange(columnNameToScanForEnd + '1:' + columnNameToScanForEnd).getValues();
+            for (var r = values.length - 1; r >= 0; r--){
+                if (values[r][0]) {
+                    last_row = r + 1;
+                    break;
                 }
             }
         } else {
-            sheet =  ss.getActiveSheet();
+            last_row = sheet.getLastRow();
+        }
+        
+        var appendOnly = typeof dataOrRowsNumber === 'number';
+        
+        var l = appendOnly ? dataOrRowsNumber : dataOrRowsNumber.length;
+        
+        if (max_rows - last_row < l) {
+            sheet.insertRowsAfter(max_rows, l - (max_rows - last_row) + 1)
+        }
+        
+        if (! appendOnly) {
+            var range = sheet.getRange(last_row + 1, optStartColumn || 1, dataOrRowsNumber.length, dataOrRowsNumber[0].length); //data should be normalized - all columns with the same size
+            range.setValues(dataOrRowsNumber);
+        }
+        
+        return last_row + 1;
+    }
+
+    function getSSAndSheet(spreadsheetOrId, sheetOrName, createSheetIfMissing) {
+        var ss = spreadsheetOrId || SpreadsheetApp.getActiveSpreadsheet();
+        if (typeof ss === 'string'){ //non empty here guaranteed by the above line
+            ss = SpreadsheetApp.openById(spreadsheetOrId);
+        }
+        var sheet;
+        if (typeof sheetOrName !== UNDEF){  //if skipped we don't need sheet object, leave it undefined
+            if (sheetOrName){
+                if (typeof sheetOrName.getName === "function"){
+                    sheet = sheetOrName;
+                }else{
+                    sheet = ss.getSheetByName(sheetOrName);
+                    if (sheet === null && createSheetIfMissing) {
+                        sheet = ss.insertSheet(sheetOrName, 0);
+                    }
+                }
+            } else {
+                sheet =  ss.getActiveSheet();
+            }
         }
         return {ss: ss, sheet:sheet};
     }
 
-    //function getNumericRange(sheet, rangeA1) {
-    //    
-    //    return sheet.getRange()
-    //}
-    //
-    function ssObject(spreadsheet) {
-        return (typeof spreadsheet === "string" ? SpreadsheetApp.openById(spreadsheet) : spreadsheet);
-    }
-    
 //====================================================================================================
 //====================================================================================================
     
@@ -116,7 +163,7 @@ var Lib = (function(){
                 var row = values[i];
                 params[row[CONSTANTS.PARAM_NAME_POSITION - 1]] = 
                     t._getByType(
-                        row,
+                        row.slice(CONSTANTS.PARAM_VALUE_POSITION - 1),
                         row[CONSTANTS.PARAM_VALUE_POSITION - 1], 
                         row[CONSTANTS.PARAM_TYPE_POSITION - 1],
                         row[CONSTANTS.ITEMS_SPLITTER_POSITION - 1]
@@ -194,21 +241,72 @@ var Lib = (function(){
 //====================================================================================================
 //====================================================================================================
 
-    function DBWriter(spreadsheet, sheet, rangeA1) {
+    /**
+     * range should be in the format: <column_name><start_row>:<ed_column>
+     *     e.g. A2:E
+     * @param spreadsheet
+     * @param sheet
+     * @param rangeA1
+     * @constructor
+     */
+    function DBWriter(spreadsheet, sheet) {
         var t = this;
         var ssAndS = getSSAndSheet(spreadsheet, sheet);
         t._ss = ssAndS.ss;
         t._sheet = ssAndS.sheet;
-        if (rangeA1){
-            t._range = t._sheet.getRange(rangeA1); //getNumericRange(t._sheet, rangeName)
-        } 
     }
 
-    DBWriter.prototype.rewrite = function (data, range) {
+    DBWriter.prototype._parseRange = function (rangeA1Name, data) {
+        var t = this, parsed = {};
+        var parts = rangeA1Name.split(':');
+        parsed.C1 = letterToColumn(parts[0][0]);
+        parsed._C2 = letterToColumn(parts[1]);
+        parsed._startRow = parseInt(parts[0][1]);
+        
+        t._checkConstraints(parsed, data);
+    }
+
+    DBWriter.prototype._checkConstraints = function (parsed, data) {
         var t = this;
-        var r = (range || t._range);
+        if (data[0].length !== parsed.C2 - parsed.C1 + 1) throw Error("Data width != range width");
+    }
+
+    /**
+     * Rewrites existing data with new
+     * @param data
+     * @param rangeName - A1 name WITHOUT header!!1
+     * @returns {boolean}
+     */
+    DBWriter.prototype.rewrite = function (data, rangeName) {
+        var t = this;
+        
+        var parsed = t._parseRange(rangeName, data);
+        
+        var r = t._sheet.getRange(t._startRow,parsed.C1, t._sheet.getLastRow(),parsed.C2 -parsed.C1 + 1);
         r.clearContent();
+        
+        r = t._sheet.getRange(t._startRow,parsed.C1, data.length, t._C2 -parsed.C1 + 1);
         r.setValues(data);
+        
+        SpreadsheetApp.flush();
+        return true;
+    }
+
+    /**
+     * Appends to existing records
+     * @param data
+     * @param rangeName - A1 name WITHOUT header!
+     * @returns {boolean}
+     */
+    DBWriter.prototype.append = function (data, rangeName) {
+        var t = this;
+        
+        var parsed = t._parseRange(rangeName, data);
+        
+        appendRows(t._sheet, data, parsed.C1);
+        
+        SpreadsheetApp.flush();
+        return true
     }
     
     
@@ -345,7 +443,7 @@ var Lib = (function(){
         var t = this;
         t._options = options || {};
         t._delimiter = options.delimiter || ',';  //needed for CSV mainly
-        t._ss = t._options.spreadsheet ? ssObject(spreadsheet) : null;
+        t._ss = t._options.ss ? getSSAndSheet(t._options.ss).ss : null;
         t._schema = [];
         for (var i = 0; i < t._schema.length; i++) {
             t._schema.push(schema[i].toString().trim().toLowerCase());
@@ -389,23 +487,34 @@ var Lib = (function(){
         
         return valuesAfterSchema;
     }
-    
-    Importer.prototype.getFromRange = function (rangeOrName, spreadsheet) {
+
+    Importer.prototype.getFrom = function (theType, params) {
         var t = this;
-        if (typeof rangeOrName === 'string'){
-            rangeOrName = ( ssObject(spreadsheet) || t._ss).getRangeByName(rangeOrName);
+        switch (theType) {
+            case 'sheet':
+                var obj = getSSAndSheet(params.ss, params.sheet);
+                return t._rearrange(obj.sheet.getDataRange().getValues());
+            
+            case 'range':
+                var range;
+                if (typeof params.range === 'string') {
+                    range = ( getSSAndSheet(params.ss, '').sheet || t._ss).getRangeByName(params.range);
+                }else{
+                    rnge = params.range;
+                }
+                return t._rearrange(range.getValues());
+            
+            case 'CSV':
+                var rows = params.data.split(/\n/);
+                var values = [];
+                for (var i = 0; i < rows.length; i++) {
+                    values.push(rows[i].split(delimiter || t._delimiter));
+                }
+                return t._rearrange(values);
+
+            default:
+                throw Error("Importer: Invalid source type: " + theType)
         }
-        return t._rearrange(rangeOrName.getValues());
-    }
-    
-    Importer.prototype.getFromCSV = function (CSV, delimiter) {
-        var t = this;
-        var rows = CSV.split(/\n/);
-        var values = [];
-        for (var i = 0; i < rows.length; i++) {
-            values.push(rows[i].split(delimiter || t._delimiter));
-        }
-        return t._rearrange(values);
     }
     
 //====================================================================================================
@@ -434,6 +543,10 @@ var Lib = (function(){
         errorRender: errorRender,
         trace: trace,
         runControllerFor: runControllerFor,
+        DBWriter: DBWriter,
+        Importer: Importer,
         
     };
 })();    
+
+var configurator = new Lib.Configurator();

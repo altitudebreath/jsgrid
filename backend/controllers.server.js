@@ -6,7 +6,7 @@ var controllers = {
     "app/booking-import": function (conf, page) {
         return {
             context: {
-                fields: conf['schema.booking'].join(', '),
+                fields: conf['schema.bookings'].join(', '),
             }
         }
     }

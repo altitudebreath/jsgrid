@@ -1,15 +1,17 @@
 var API = (function (){
     return {
-        booking: {
-            rewrite: function (data){
+        bookings: {
+            rewrite: function (params, conf){
                 var w = new Lib.DBWriter(CONSTANTS.ADMIN_SPREADSHEET_ID, 'bookings', 'A2:P');
-                w.rewrite(data);
+                w.rewrite(params.data);
                 return true;
             },
 
-            append: function(data){
+            append: function(params, conf){
                 var w = new Lib.DBWriter(CONSTANTS.ADMIN_SPREADSHEET_ID, 'bookings', 'A2:P');
-                w.append(data);
+                var imp = new Lib.Importer(conf['schema.bookings']);
+                w.append(imp.getFrom(params.type, params));
+                
                 return true;
             }
         }

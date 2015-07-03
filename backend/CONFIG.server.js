@@ -35,3 +35,4 @@ var CONSTANTS = {
     //TRIGGER_CALL_INTERVAL: 60 * 1000,
 }
 
+var UNDEF = "undefined";

@@ -1,11 +1,11 @@
-<h1>Import Booking data</h1>
+<h1>Import Bookings data</h1>
 
 <div class="panel panel-info">
     <div class="panel-heading">
         <h3 class="panel-title">Header Format !</h3>
     </div>
     <div class="panel-body">
-        You should have the data header with the following field names: <?= C.fields ?><br />
+        You should have the data header with the following field names: <strong><?= C.fields ?></strong><br />
         Data columns should correspond header names.
         Data header is the first text row for a CSV, or the top cells row in a range or a sheet
     </div>
@@ -67,9 +67,9 @@
     <fieldset>
         <legend>Import from CSV</legend>
         <div class="form-group">
-            <label for="textArea" class="col-lg-2 control-label">CSV contents</label>
+            <label for="CSVArea" class="col-lg-2 control-label">CSV contents</label>
             <div class="col-lg-10">
-                <textarea class="form-control" rows="3" id="textArea"></textarea>
+                <textarea class="form-control" rows="3" id="CSVArea"></textarea>
                 <span class="help-block">Copy-Paste CSV file contents here</span>
             </div>
         </div>
@@ -78,13 +78,13 @@
             <div class="col-lg-10">
                 <div class="radio radio-primary">
                     <label>
-                        <input type="radio" name="delimiter" id="delimiterTab" value="tab" checked="">
+                        <input type="radio" name="delimiter" id="delimiterTab" value="&#09" checked="">
                         Tab
                     </label>
                 </div>
                 <div class="radio radio-primary">
                     <label>
-                        <input type="radio" name="delimiter" id="delimiterComma" value="comma">
+                        <input type="radio" name="delimiter" id="delimiterComma" value=",">
                         Comma
                     </label>
                 </div>
@@ -110,8 +110,9 @@
     $(function () {
         var f3 = $("#form-csv");
         f3.find(".submit").on('click', function() {
-            var actionParams = {};
-            actionParams.data = f3.find('textarea').val();
+            var actionParams = {type: 'CSV'};
+            actionParams.data = $('#CSVArea').val();
+            
             var delimiter = f3.find('input[name=radioName]:checked').val();
             if (delimiter !== 'custom'){
                 actionParams.delimiter = delimiter;
@@ -124,8 +125,32 @@
                     //TODO - actually don't need anything here
                 }
             })
+        });
+
+        var f2 = $("#form-Sheet");
+        f2.find(".submit").on('click', function() {
+            var actionParams = {type: 'sheet'};
+            actionParams.sheet = $('#inputSheetName').val();
+            actionParams.ss = $('#inputSpreadsheetId-Sheet').val();
             
+            callAction('bookings', 'append', actionParams, {
+                callback: function (result) {
+                    //TODO - actually don't need anything here
+                }
+            })
+        });
+
+        var f1 = $("#form-NR");
+        f1.find(".submit").on('click', function() {
+            var actionParams = {type: 'range'};
+            actionParams.range = $('#inputRangeName').val();
+            actionParams.ss = $('#inputSpreadsheetId-NR').val();
             
+            callAction('bookings', 'append', actionParams, {
+                callback: function (result) {
+                    //TODO - actually don't need anything here
+                }
+            })
         });
     });
 </script>

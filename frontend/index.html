@@ -63,14 +63,13 @@
         </div>
         <div class="col-md-10  col-sm-8 col-xs-8">
             <!-- this is just a template-->
-            <div id="flash-message" class="alert alert-dismissable alert-info">
+            <div class="flash-message alert alert-dismissable alert-info" style="display: none">
                 <button type="button" class="close" data-dismiss="alert">×</button>
                 <h4 class="header flash_title"></h4>
 
                 <p class="message flash_text"></p>
             </div>
-            <div id="flash-container">
-            </div>
+            <div id="flash-container"></div>
 
             <!-- Use a templated HTML printing scriptlet to import JavaScript. -->
             <?!= HtmlService.createHtmlOutputFromFile('code.js').getContent(); ?>

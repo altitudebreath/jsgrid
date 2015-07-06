@@ -63,13 +63,19 @@ function doGet(e) {
 }
 
 function runAction(entity, operation, actionParams){
-    var conf = configurator.get();
-    try {
-        var func = API[entity][operation];
+    try{
+        var conf = configurator.get();
+        try {
+            var func = API[entity][operation];
+        }catch(e){
+            throw Error("Wrong Entity or Operation: " + entity + ', ' + operation);
+        }
+        return func(actionParams, conf);
     }catch(e){
-        throw Error("Wrong Entity or Operation: " + entity + ', ' + operation);
-    }
-    return func(actionParams, conf);
+        var tr = Lib.trace(e);
+        Logger.log(tr);
+        throw Error(DEBUG ? tr : e.message);
+    }   
 }
 
 function doPost(e){

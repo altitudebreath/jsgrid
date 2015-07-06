@@ -442,7 +442,7 @@ var Lib = (function(){
     function Importer(schema, options) {
         var t = this;
         t._options = options || {};
-        t._delimiter = options.delimiter || ',';  //needed for CSV mainly
+        t._delimiter = t._options.delimiter || ',';  //needed for CSV mainly
         t._ss = t._options.ss ? getSSAndSheet(t._options.ss).ss : null;
         t._schema = [];
         for (var i = 0; i < t._schema.length; i++) {
@@ -517,17 +517,6 @@ var Lib = (function(){
         }
     }
     
-//====================================================================================================
-//====================================================================================================
-
-    function API(endpoint) {
-        var t = this;
-        
-    }
-
-    API.prototype.get = function () {
-        var t = this;
-    }
 //====================================================================================================
 //====================================================================================================
     return {

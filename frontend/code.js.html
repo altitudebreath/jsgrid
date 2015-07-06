@@ -22,7 +22,7 @@
         t._successTimeout = successTimeout;
     }
 
-    Notifier.ERROR = 'warning';
+    Notifier.ERROR = 'danger';
     Notifier.INFO = 'info';
     Notifier.SUCCESS = 'success';
     
@@ -31,13 +31,13 @@
         var t = this;
         var flash = t._flashOrig.clone();
         alterPrefixedClass(flash, t._styleClassPrefix, messageType);
-        flash.find('.flash_text').text(message);
+        flash.find('.flash_text').html(message);
         flash.find('.flash_title').text(title);
         t._flashContainer.append(flash);
         flash.show();
         if (t._successTimeout){
             setTimeout(function () {
-                        flash.remove();
+                        flash.fadeOut(500, function(){$(this).remove()});
                 }, t._successTimeout
             )
         }
@@ -53,7 +53,7 @@
         t._spinner[isBusy ? 'show' : 'hide']();
     }
     
-    var notifier = new Notifier('#flash-container', '#flash-message', 'alert-', '#spinner-overlay', 4000);
+    var notifier = new Notifier('#flash-container', '.flash-message', 'alert-', '#spinner-overlay', 0 /*5000*/);
     
     
     function onSuccessWrapper(result, env) {
@@ -96,11 +96,7 @@
         if (typeof error === 'string') {
             return {title: 'Error', message: error};
         } else {
-            var errInfo = "";
-            for (var prop in error) {
-                errInfo += prop + ": " + error[prop] + "<br />";
-            }
-            return {title: error.name, message: errInfo};
+            return {title: error.name, message: error.message.replace(/\n/g, '<br />')};
         }
     }
 

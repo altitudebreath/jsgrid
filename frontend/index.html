@@ -5,70 +5,85 @@
     <?!= HtmlService.createHtmlOutputFromFile('style.css').getContent(); ?>
 
 </head>
-  <body>
-  <!-- Your site -->
-  <div class="container">
-      <div class="navbar navbar-warning">
-          <div class="navbar-header">
-              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-warning-collapse">
-                  <span class="icon-bar"></span>
-                  <span class="icon-bar"></span>
-                  <span class="icon-bar"></span>
-              </button>
-              <a class="navbar-brand" href="javascript:void(0)"><?= C.title ?></a>
-          </div>
-          <div class="navbar-collapse collapse navbar-warning-collapse">
-              <ul class="nav navbar-nav">
-                  <li class="<?= C.isMe('app_home', 'active') ?>"><a href="<?= C.getUrl('app_home') ?>">Home</a></li>
-                  <li class="<?= C.isMe('app_list-management', 'active') ?>"><a href="<?= C.getUrl('app_list-management') ?>">List Management</a></li>
-                  <li class="dropdown">
-                      <a href="#" data-target="#" class="dropdown-toggle" data-toggle="dropdown">Tools
-                          <b class="caret"></b></a>
-                      <ul class="dropdown-menu">
-                          <li><a href="<?= C.getUrl('app_booking-import') ?>">Import Bookings</a></li>
-                      </ul>
-                  </li>
-                  <li class="<?= C.isMe('admin_home', 'active') ?>"><a href="<?= C.getUrl('admin_home') ?>">Admin</a></li>
-                  <li class="dropdown">
-                      <a href="#" data-target="#" class="dropdown-toggle" data-toggle="dropdown"><i class="mdi-social-person"></i><?= C.auth.getEmail() ?> <b class="caret"></b></a>
-                      <ul class="dropdown-menu">
-                          <li><a href="javascript:void(0)">Profile</a></li>
-                          <li><a href="https://www.google.com/accounts/Logout?continue=https://developers.google.com/apps-script/reference/base/logger&service=ahsid">Sign Out (Google)</a></li>
-                      </ul>
-                  </li>
-              </ul>
-              <form class="navbar-form navbar-left">
-                  <input type="text" class="form-control col-lg-8" placeholder="Search">
-              </form>
-              <ul class="nav navbar-nav navbar-right">
-                  <li class="dropdown">
-                      <a href="#" data-target="#" class="dropdown-toggle" data-toggle="dropdown"><i class="mdi-social-person"></i> <?= C.auth.getEmail() ?> <b class="caret"></b></a>
-                      <ul class="dropdown-menu">
-                          <li><a href="javascript:void(0)">Profile</a></li>
-                          <li><a href="https://www.google.com/accounts/Logout?continue=<?= C.page.getUrl() ?>">Sign Out (Google)</a></li>
-                      </ul>
-                  </li>
-              </ul>
-          </div>
-      </div>
-      
-      <!-- this is just a template-->
-      <div id="flash-message" class="alert alert-dismissable alert-info">
-          <button type="button" class="close" data-dismiss="alert">×</button>
-          <h4 class="header flash_title"></h4>
-          <p class="message flash_text"></p>
-      </div>
-      <div id="flash-container">
-      </div>
-      
-      <!-- Use a templated HTML printing scriptlet to import JavaScript. -->
-      <?!= HtmlService.createHtmlOutputFromFile('code.js').getContent(); ?>
+<body>
+<!-- Your site -->
+<div class="container-fluid">
+    <div class="navbar navbar-warning">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-warning-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="<?= C.getUrl('app_home') ?>"><?= C.title ?></a>
+        </div>
+        <div class="navbar-collapse collapse navbar-warning-collapse">
+            <ul class="nav navbar-nav">
+                <li class="<?= C.isMe('app_home', 'active') ?>"><a href="<?= C.getUrl('app_home') ?>">Home</a></li>
+                <li class="dropdown">
+                    <a href="#" data-target="#" class="dropdown-toggle" data-toggle="dropdown">Settings
+                        <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="<?= C.getUrl('app_booking-import') ?>">Import Bookings</a></li>
+                    </ul>
+                </li>
+                <li class="dropdown">
+                    <a href="#" data-target="#" class="dropdown-toggle" data-toggle="dropdown"><strong>Admin</strong> <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                        <li class="<?= C.isMe('admin_home', 'active') ?>"><a href="<?= C.getUrl('admin_home') ?>">Dashboard</a></li>
+                    </ul>
+                </li>
+            </ul>
+            <form class="navbar-form navbar-left">
+                <input type="text" class="form-control col-lg-8" placeholder="Search">
+            </form>
+            
+            <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown">
+                    <a href="#" data-target="#" class="dropdown-toggle" data-toggle="dropdown"><i
+                            class="mdi-social-person"></i> <?= C.auth.getEmail() ?> <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="javascript:void(0)">Profile</a></li>
+                        <li><a href="https://www.google.com/accounts/Logout?continue=<?= C.page.getUrl() ?>">Sign Out
+                            (Google)</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <!-- end navbar -->
 
-      <div id="view"><?!= viewContent ?></div>
-  </div>
-  
-  <div id="spinner-overlay"><div class="spinner"></div></div>
-  
-  </body>
+    <div class="row">
+        <div class="col-md-2 col-sm-3 col-xs-4">
+            <ul class="nav nav-pills nav-stacked">
+                <li class="<?= C.isMe('app_bookings', 'active') ?>"><a href="<?= C.getUrl('app_bookings') ?>"><i class="mdi-action-assignment-turned-in"></i>Bookings</a></li>
+                <li class="<?= C.isMe('app_availability', 'active') ?>"><a href="<?= C.getUrl('app_availability') ?>"><i class="mdi-editor-insert-invitation"></i>Availability</a></li>
+                <li class="<?= C.isMe('app_list-management', 'active') ?>"><a href="<?= C.getUrl('app_home') ?>"><i class="mdi-editor-format-list-bulleted"></i>List Management</a></li>
+            </ul>
+        </div>
+        <div class="col-md-10  col-sm-8 col-xs-8">
+            <!-- this is just a template-->
+            <div id="flash-message" class="alert alert-dismissable alert-info">
+                <button type="button" class="close" data-dismiss="alert">×</button>
+                <h4 class="header flash_title"></h4>
+
+                <p class="message flash_text"></p>
+            </div>
+            <div id="flash-container">
+            </div>
+
+            <!-- Use a templated HTML printing scriptlet to import JavaScript. -->
+            <?!= HtmlService.createHtmlOutputFromFile('code.js').getContent(); ?>
+
+            <div id="view"><?!= viewContent ?></div>
+        </div>
+    </div>
+</div>
+
+<div id="spinner-overlay">
+    <div class="spinner"></div>
+</div>
+
+</body>
 </html>
 

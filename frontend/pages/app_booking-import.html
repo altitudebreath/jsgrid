@@ -1,4 +1,13 @@
-<h1>Import Bookings data</h1>
+<h1>The Bookings data Manual Update</h1>
+
+<div class="panel panel-warning">
+    <div class="panel-heading">
+        <h3 class="panel-title">Setup and use the Booking Sources for regular updates! !</h3>
+    </div>
+    <div class="panel-body">
+        This page exists for special cases only, use Booking Sources for normal data flow.
+    </div>
+</div>
 
 <div class="panel panel-info">
     <div class="panel-heading">
@@ -120,11 +129,10 @@
                 actionParams.delimiter = $('#delimiterCustom').val();
             }
             
-            callAction('bookings', 'append', actionParams, {
-                callback: function (result) {
-                    //TODO - actually don't need anything here
-                }
-            })
+            callAction('bookings', 'append', actionParams)
+                    .then(function(result){
+                        //TODO - actually don't need anything here
+                    })
             
             return false;
         });
@@ -135,11 +143,10 @@
             actionParams.sheet = $('#inputSheetName').val();
             actionParams.ss = $('#inputSpreadsheetId-Sheet').val();
             
-            callAction('bookings', 'append', actionParams, {
-                callback: function (result) {
-                    //TODO - actually don't need anything here
-                }
-            })
+            callAction('bookings', 'appendRows', actionParams)
+                    .then(function(result){
+                        //TODO - actually don't need anything here
+                    })
             
             return false;
         });
@@ -150,11 +157,10 @@
             actionParams.range = $('#inputRangeName').val();
             actionParams.ss = $('#inputSpreadsheetId-NR').val();
             
-            callAction('bookings', 'append', actionParams, {
-                callback: function (result) {
-                    //TODO - actually don't need anything here
-                }
-            })
+            callAction('bookings', 'appendRows', actionParams)
+                    .then(function(result){
+                        //TODO - actually don't need anything here
+                    })
             
             return false;
         });

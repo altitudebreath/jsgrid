@@ -1,4 +1,8 @@
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<!--<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>-->
+<!--<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>-->
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.3.0/js/ripples.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.3.0/js/material.min.js"></script>
@@ -62,13 +66,15 @@
         notifier.flash(Notifier.SUCCESS, 'Success', 'DONE!');
         notifier.busy(false);
         
-        if (env.callback) env.callback(result);
+        env.deferred.resolve(result);
     }
 
     function onErrorWrapper(error, env) {
         var er = formatError(error);
         notifier.flash(Notifier.ERROR, er.title, er.message);
         notifier.busy(false);
+
+        env.deferred.reject(error);
     }
 
     var runner = google.script.run
@@ -84,12 +90,16 @@
     }
 
     function callAction(entity, operation, actionParams, env) {
+        var d = $.Deferred();
         env = env || {};
+        env.deferred = d;
         console.log("action handler called.");
         notifier.clearFlash();
         notifier.busy(true);
 
         runner.withUserObject(env).runAction(entity, operation, actionParams);
+        
+        return d.promise();
     }
 
     function formatError(error) {
@@ -103,6 +113,8 @@
     /**
      * Run initializations on web app load.
      */
+    var keyCallbacks = {};
+    
     $(function () {
         /**
          * This is a clever trick to redirect whole browser window
@@ -118,6 +130,16 @@
         // Call the server here to retrieve any information needed to build the page.
         $.material.init();
 
+        $(window).bind('keydown', function(event) {
+            if (event.ctrlKey || event.metaKey) {
+                var char = String.fromCharCode(event.which).toLowerCase();
+                var cb = keyCallbacks['C-' + char];
+                if (cb) {
+                    event.preventDefault();
+                    keyCallbacks['C-' + char]();
+                }
+            }
+        });
     });
 
 </script>

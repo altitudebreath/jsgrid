@@ -1,6 +1,13 @@
 var Lib = (function(){
     function stub() {};
     
+    function uuid(){
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+            return v.toString(16);
+        });
+    }
+    
     function isArray(obj) {
         return Object.prototype.toString.call(obj) === '[object Array]';
     }
@@ -69,17 +76,22 @@ var Lib = (function(){
         return column;
     }
     
-    function appendRows(sheet, dataOrRowsNumber, optStartColumn, columnNameToScanForEnd) {
+    function appendRows(sheet, dataOrRowsNumber, optStartColumn, columnNameToScanForEndORstartRow) {
+        var o = {};
         var max_rows = sheet.getMaxRows();
         var last_row = 1;
-        if (columnNameToScanForEnd){
-            var values  = sheet.getRange(columnNameToScanForEnd + '1:' + columnNameToScanForEnd).getValues();
-            for (var r = values.length - 1; r >= 0; r--){
-                if (values[r][0]) {
-                    last_row = r + 1;
-                    break;
+        if (typeof columnNameToScanForEndORstartRow !== UNDEF){
+                if (typeof columnNameToScanForEndORstartRow === 'string') { //column name
+                    var values = sheet.getRange(columnNameToScanForEndORstartRow + '1:' + columnNameToScanForEndORstartRow).getValues();
+                    for (var r = values.length - 1; r >= 0; r--) {
+                        if (values[r][0]) {
+                            last_row = r + 1;
+                            break;
+                        }
+                    }
+                }else{ //should be a number
+                    last_row = columnNameToScanForEndORstartRow;
                 }
-            }
         } else {
             last_row = sheet.getLastRow();
         }
@@ -89,7 +101,8 @@ var Lib = (function(){
         var l = appendOnly ? dataOrRowsNumber : dataOrRowsNumber.length;
         
         if (max_rows - last_row < l) {
-            sheet.insertRowsAfter(max_rows, l - (max_rows - last_row) + 1)
+            sheet.insertRowsAfter(max_rows, l - (max_rows - last_row) + 1);
+            o.inserted = true;
         }
         
         if (! appendOnly) {
@@ -97,7 +110,7 @@ var Lib = (function(){
             range.setValues(dataOrRowsNumber);
         }
         
-        return last_row + 1;
+        return o;
     }
 
     function getSSAndSheet(spreadsheetOrId, sheetOrName, createSheetIfMissing) {
@@ -161,13 +174,14 @@ var Lib = (function(){
             var params = {};
             for (var i = CONSTANTS.PARAM_ROWS_STARTS_FROM - 1; i < values.length; i++){
                 var row = values[i];
-                params[row[CONSTANTS.PARAM_NAME_POSITION - 1]] = 
+                walkNamespace(params, row[CONSTANTS.PARAM_NAME_POSITION - 1], 
                     t._getByType(
                         row.slice(CONSTANTS.PARAM_VALUE_POSITION - 1),
                         row[CONSTANTS.PARAM_VALUE_POSITION - 1], 
                         row[CONSTANTS.PARAM_TYPE_POSITION - 1],
                         row[CONSTANTS.ITEMS_SPLITTER_POSITION - 1]
-                    );
+                    )
+                );
             }
             t._instance = params;//extend({}, params, CONSTANTS); 
             
@@ -236,8 +250,103 @@ var Lib = (function(){
             .setSandboxMode(HtmlService.SandboxMode.IFRAME);
         
     }
+
+
+//====================================================================================================
+//====================================================================================================
+
+    //TODO at some point it would be need to implement hashes and ids, 
+    //TODO... but it is complex and needs strict rules on data sources (no rewrites etc)
+    //function getHash(fields){
+    //    return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_1, fields.join('|'));
+    //}
+    //
+    //function genUID() {
+    //    return Date.now()*1000 + Math.floor(Math.random()*1000).toString;
+    //}
     
+    function Record(record, dbManager, schema) {
+        var t = this;
+        t._schema = schema;
+        t._dbm = dbManager;
+        t._options = options;
+        t._record = record || null;
+        t._fieldToIndex = {};
+        for (var i=0; i< t._schema.fields.length; i++){
+            t._fieldToIndex[t._schema.fields[i]] = i;
+        }
+    }
+
+   
+    Record.prototype.create = function (record) {
+        //TODO: check if unique
+        var t = this;
+        var rec = record || t._record;
+        if (!rec) throw Error("Record: empty record");
+        
+        return t._dbm.appendRows([t._recordToRow(rec)])
+    }
     
+    Record.prototype.update = function (record) {
+        //TODO: decide what can be updated and what not (primary key), construct HASH
+        var t = this;
+        var rec = record || t._record;
+        if (!rec) throw Error("Record: empty record");
+        
+        return t._dbm.updateRows(parseInt(rec.__UID), [t._recordToRow(rec)])
+        
+    }
+    
+    Record.prototype._recordToRow = function (record) {
+        var t = this;
+        
+        var arr = new Array(Object.keys(record).length);
+        for (var fieldName in record) {
+            var index = t._fieldToIndex[fieldName];
+            if (typeof index === UNDEF) throw Error("DBManager: invalid field name: " + fieldName);
+            arr[index] = record[index]
+        }
+        //t._schema.hashColumn === 'before' ? arr.unshift(hash) : arr.push(hash);
+        return arr;
+    }
+
+    Record.prototype._rowToRecord = function (row, id) {
+        var t = this;
+        var record = {};
+        for (var i = 0; i < row.length; i++) {
+            record[t._schema.fields[i]] = row[i];
+        }
+        if (id) record.__UID = id;
+        return record;
+    }
+
+    Record.prototype._rowsToRecordSet = function (rows, startId) {
+        var t = this;
+        var records = [];
+        for (var i = 0; i < rows.length; i++) {
+            records.push(t._rowToRecord(rows[i], startId + i));
+        }
+        return records;
+    }
+    
+    Record.prototype.getMany = function (startOffset, limit) {
+        var t = this;
+        var rows = t._dbm.getRows(startOffset, limit);
+        return t._rowsToRecordSet(rows, startOffset);
+    }
+
+    /**
+     * searches by field values equality
+     * @param recordCriteria - {fieldName: value, fieldName: value}
+     */
+    Record.prototype.select = function (recordCriteria) {
+        var t = this, criteria = {};
+        for (var c in recordCriteria) {
+            criteria[t._fieldToIndex[c]] = recordCriteria[c];
+        }
+        
+        return t._rowsToRecordSet(t._dbm.selectRows(criteria));
+    }
 //====================================================================================================
 //====================================================================================================
 
@@ -245,70 +354,111 @@ var Lib = (function(){
      * range should be in the format: <column_name><start_row>:<ed_column>
      *     e.g. A2:E
      * @param spreadsheet
-     * @param sheet
-     * @param rangeA1
+     * @param range - data range
      * @constructor
      */
-    function DBWriter(spreadsheet, sheet) {
+    function DBManager(spreadsheet, range) {
         var t = this;
-        var ssAndS = getSSAndSheet(spreadsheet, sheet);
+        t._dataRange = range;
+        t._rangeDef = /(\w+)\!([A-Za-z]+)(\d+):(\w+)/.exec(t._dataRange);   //eg. bookings!A2:P ==> bookings(1)  A(2)   2(3)  P(4)
+        var ssAndS = getSSAndSheet(spreadsheet, t._rangeDef[1]);
         t._ss = ssAndS.ss;
         t._sheet = ssAndS.sheet;
+
+        t._dim = t._initActualRange();
     }
 
-    DBWriter.prototype._parseRange = function (rangeA1Name, data) {
-        var t = this, parsed = {};
-        var parts = rangeA1Name.split(':');
-        parsed.C1 = letterToColumn(parts[0][0]);
-        parsed._C2 = letterToColumn(parts[1]);
-        parsed._startRow = parseInt(parts[0][1]);
-        
-        t._checkConstraints(parsed, data);
-    }
-
-    DBWriter.prototype._checkConstraints = function (parsed, data) {
+    DBManager.prototype._initActualRange = function () {
         var t = this;
-        if (data[0].length !== parsed.C2 - parsed.C1 + 1) throw Error("Data width != range width");
+        t._range = t._sheet.getRange(
+            t._rangeDef[3], 
+            letterToColumn(t._rangeDef[2]), 
+            t._sheet.getLastRow() - t._rangeDef[3] + 1, 
+            letterToColumn(t._rangeDef[4])
+        );
+        return {
+            height: t._range.getHeight(),
+            width: t._range.getWidth(),
+            row: t._range.getRow(),
+            col: t._range.getColumn(),
+        }
     }
 
+    DBManager.prototype._checkConstraints = function (data) {
+        var t = this;
+        if (data[0].length !== t._dim.width) throw Error("Data width != range width");
+    }
+
+    DBManager.prototype._subset = function (startOffset, rowLimit) {
+        var t = this;
+        if (!startOffset && !rowLimit) return t._range; //optimization
+        return t._range.offset(startOffset || 0, 0, rowLimit || t._dim.height);
+    }
+    
+    DBManager.prototype.getRows = function (startOffset, rowLimit) {
+        var t = this;
+        return t._subset(startOffset, rowLimit).getValues();
+    }
+
+    DBManager.prototype.updateRows = function (startOffset, data) {
+        var t = this;
+        t._checkConstraints(data);
+        t._sheet.getRange(startOffset + t._dim.row, 
+            t._dim.col, data.length, t._dim.width).setValues(data);
+        return true;
+    }
     /**
      * Rewrites existing data with new
      * @param data
-     * @param rangeName - A1 name WITHOUT header!!1
      * @returns {boolean}
      */
-    DBWriter.prototype.rewrite = function (data, rangeName) {
+    DBManager.prototype.rewriteData = function (data) {
         var t = this;
-        
-        var parsed = t._parseRange(rangeName, data);
-        
-        var r = t._sheet.getRange(t._startRow,parsed.C1, t._sheet.getLastRow(),parsed.C2 -parsed.C1 + 1);
-        r.clearContent();
-        
-        r = t._sheet.getRange(t._startRow,parsed.C1, data.length, t._C2 -parsed.C1 + 1);
-        r.setValues(data);
-        
-        SpreadsheetApp.flush();
-        return true;
+        t._checkConstraints(data);
+        t._range.clearContent();
+        return t._appendRows(data);
     }
 
     /**
      * Appends to existing records
      * @param data
-     * @param rangeName - A1 name WITHOUT header!
      * @returns {boolean}
      */
-    DBWriter.prototype.append = function (data, rangeName) {
+    DBManager.prototype.appendRows = function (data) {
         var t = this;
-        
-        var parsed = t._parseRange(rangeName, data);
-        
-        appendRows(t._sheet, data, parsed.C1);
-        
+        t._checkConstraints(data);
+        return t._appendRows(data);
+    }
+    
+    
+    DBManager.prototype._appendRows = function (data) {
+        var t = this;
+        var res = appendRows(t._sheet, data, t._dim.col, t._dim.row);
+        if (res.inserted){
+            //need to update original range, because new column where inserted at the bottom
+            t._dim = t._initActualRange();
+        } 
         SpreadsheetApp.flush();
         return true
     }
-    
+
+    /**
+     * 
+     * @param criteria - {index: value, index2: value2...}
+     */
+    DBManager.prototype.selectRows = function (criteria) {
+        var t = this;
+        var rows = [];
+        var values = t._range.getValues();
+        for (var i = 0; i < values.length; i++) {
+            for (var c in criteria){
+                if (values[i][c].indexOf(criteria[c]) !== -1){
+                    rows.push(values[i]);
+                }
+            }
+        }
+        return null;
+    }
     
 //====================================================================================================
 //====================================================================================================
@@ -460,7 +610,7 @@ var Lib = (function(){
         for (i = 0; i < t._schema.length; i++) {
             var index = newFields.indexOf(t._schema[i]);
             if (index === -1){
-                return null; //invalid schema!
+                return null; //missing field!
             }
             realFieldsOrder.push(index);
         }
@@ -473,8 +623,8 @@ var Lib = (function(){
         
         var valuesAfterSchema = [];
         
-        var order = t._validateFields(values[0]);
-        if (order === null) throw Error("Invalid order");
+        var order = t._validateFields(header);
+        if (order === null) throw Error("Invalid source schema, missing fields");
 
         for (var i = 1; i < values.length; i++) {
             properRow = new Array(header.length);
@@ -500,7 +650,7 @@ var Lib = (function(){
                 if (typeof params.range === 'string') {
                     range = ( getSSAndSheet(params.ss, '').sheet || t._ss).getRangeByName(params.range);
                 }else{
-                    rnge = params.range;
+                    range = params.range;
                 }
                 return t._rearrange(range.getValues());
             
@@ -517,6 +667,42 @@ var Lib = (function(){
         }
     }
     
+    /**
+     * Finds (and optionally creates) proper sub-object in the namespace base object by string path
+     * @param  {Object} baseNS         Base object
+     * @param  {string} namePathString like "A.B.C"m where C is a target name for value placing
+     * @param {string} optValue   --- value to write, if it is specified, this is a write operation
+     */
+    function walkNamespace(baseNS, namePathString, optValue){
+
+        var nameParts = namePathString.split(/\s*\.\s*/);
+        
+        var part = baseNS;
+
+        var l = nameParts.length; //edge case: l==1 (single name) - works as well
+
+        for (var i=0; i < (l - 1); i++){
+
+            if (! (nameParts[i] in part)){
+                if (typeof optValue !== "undefined"){
+                    //this is a 'write' operation, add missing name chain here
+                    part[nameParts[i]] = {};
+                }else{
+                    //there is no such entry
+                    return null;
+                }
+            }
+            part = part[nameParts[i]];
+        }
+
+        if (typeof optValue !== UNDEF){
+            part[nameParts[l - 1]] = optValue
+        }
+
+        if (DEBUG) Lib.log(["walkNamespace", namePathString, JSON.stringify(baseNS)]);
+        
+        return part[nameParts[l - 1]];
+    }
 //====================================================================================================
 //====================================================================================================
     return {
@@ -532,8 +718,9 @@ var Lib = (function(){
         errorRender: errorRender,
         trace: trace,
         runControllerFor: runControllerFor,
-        DBWriter: DBWriter,
+        DBManager: DBManager,
         Importer: Importer,
+        Record: Record,
         
     };
 })();    

@@ -41,28 +41,37 @@
 
         $("#data-grid").jsGrid({
                 height: "100%",
-                width: "auto",
+                width: "100%",
          
                 filtering: true,
                 editing: true,
                 sorting: true,
-                paging: true,
+                //paging: true,
+                //pageLoading: true,
                 inserting: true,
             
                 autoload: true,
                 
-                pageSize: 15,
-                pageButtonCount: 5,
+                //pageSize: 15,
+                //pageButtonCount: 5,
          
                 controller: {
                     loadData: function(aFilter) {
+                        var options = {};
                         //returns a Promise
                         if (aFilter){
+                            if (typeof aFilter.pageIndex !== "undefined"){
+                                options.pageIndex = aFilter.pageIndex;
+                                delete aFilter.pageIndex;
+                                options.pageSize = aFilter.pageSize;
+                                delete aFilter.pageSize;
+                            }
+                            options.criteria = aFilter;
                             return callAction(params.entity, 'select', 
-                                    $.extend({criteria: aFilter}, params.common));
+                                    $.extend(options, params.common));
                         }else {
                             return callAction(params.entity, 'getMany', 
-                                    $.extend({}, params.common));
+                                    $.extend(options, params.common));
                         }
                     },
                     insertItem: function(item) {

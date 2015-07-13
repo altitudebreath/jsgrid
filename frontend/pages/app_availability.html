@@ -2,12 +2,14 @@
     <h1>Current Availability</h1>
     <div id="data-grid"></div>
 </div>
-<?!= HtmlService.createHtmlOutputFromFile('grid.inc').getContent(); ?>
+<?!= HtmlService.createHtmlOutputFromFile('Grid.CLIENT_JS').getContent(); ?>
 <script>
+    var schema = <?!=C.schema ?>;
+    
     $(function () {
         initGrid({
             entity: 'availability',
-            
+            fields: schema,
         })
     });
 </script>

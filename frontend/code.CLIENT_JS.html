@@ -60,10 +60,12 @@
     var notifier = new Notifier('#flash-container', '.flash-message', 'alert-', '#spinner-overlay', 0 /*5000*/);
     
     
+    console.log('-- SUCCESS wrapper --------------->');
     function onSuccessWrapper(result, env) {
         if (!result) return; //this is a callback NOT from business logic endpoints, like UI dialog...
-
+        console.log('!!! SUCCESS -------------------------------------------------------');
         var parsedResult = JSON.parse(result).result;
+        console.log(parsedResult);
         
         notifier.flash(Notifier.SUCCESS, 'Success', 'DONE!');
         notifier.busy(false);

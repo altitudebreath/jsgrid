@@ -19,9 +19,9 @@ var API = (function (){
             getMany: function(params, conf){
                 var dbm = new Lib.DBManager(CONSTANTS.ADMIN_SPREADSHEET_ID, conf.schema.bookings.range);
                 var rec = new Lib.Record(null, dbm, conf.schema.bookings);
-                var start = ((params.pageIndex || 1) - 1) * (params.pageSize || 0);
+                var startOffset = ((params.pageIndex || 1) - 1) * (params.pageSize || 0);
                 var limit = params.pageSize || 0;
-                return rec.getMany(start, limit);
+                return rec.getMany(startOffset, limit);
             },
             
             create: function(params, conf){
@@ -43,7 +43,9 @@ var API = (function (){
             select: function(params, conf){
                 var dbm = new Lib.DBManager(CONSTANTS.ADMIN_SPREADSHEET_ID, conf.schema.bookings.range);
                 var rec = new Lib.Record(null, dbm, conf.schema.bookings)
-                return rec.select(params.criteria);
+                var startOffset = ((params.pageIndex || 1) - 1) * (params.pageSize || 0);
+                var limit = params.pageSize || 0;
+                return rec.select(params.criteria, startOffset, limit);
             }
         }
     }

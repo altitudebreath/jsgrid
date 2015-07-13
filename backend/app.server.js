@@ -32,6 +32,8 @@ function doGet(e) {
 
         var page = new Lib.Page(e, conf.default_page);
 
+        var err = "";
+        
         if (page.isValid()) {
             //this is ours user, but let's check if he has permissions for this page...
             if (!auth.validateRole(page)) {
@@ -46,13 +48,15 @@ function doGet(e) {
                 var data = Lib.runControllerFor(conf, page);
                 return r.render(data.template, data.context);
             } catch (e) {
-                Lib.log(Lib.trace(e));
+                err = Lib.trace(e);
+                Lib.log(err);
                 //just end up with the 404 error page below, if invalid URL
             }
         }
 
         return r.render('service_404', {
-            page: page
+            page: page,
+            error: DEBUG ? err : "",
         });
     
     }catch(e){

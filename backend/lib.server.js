@@ -35,7 +35,7 @@ var Lib = (function(){
     }
 
     function trace(err) {
-        var errInfo = "ERROR:\n";
+        var errInfo = "\n";
         for (var prop in err) {
             errInfo += prop + ": " + err[prop] + "\n";
         }
@@ -149,7 +149,7 @@ var Lib = (function(){
     
     function Configurator(){
         var t = this;
-        t._instance = null;
+        t._schema = null;
         t._handlers = {
             'string': function(val){return val.toString();},
             'integer': function(val){return parseInt(val);},
@@ -173,8 +173,8 @@ var Lib = (function(){
     
     Configurator.prototype.get = function () {
         var t = this;
-        if (t._instance) {
-            return t._instance;
+        if (t._schema) {
+            return t._schema;
         } else {
             var ss = SpreadsheetApp.openById(CONSTANTS.ADMIN_SPREADSHEET_ID);
             var paramSheet = ss.getSheetByName(CONSTANTS.PARAMETERS_SHEET_NAME);
@@ -194,9 +194,9 @@ var Lib = (function(){
                     );
                 }
             }
-            t._instance = params;//extend({}, params, CONSTANTS); 
+            t._schema = params;//extend({}, params, CONSTANTS); 
             
-            return t._instance;
+            return t._schema;
         }
     };
     
@@ -263,6 +263,36 @@ var Lib = (function(){
     }
 
 
+    function Schema(configurator) {
+        var t = this;
+        t._configurator = configurator;
+    }
+
+    Schema.prototype.get = function () {
+        var t = this;
+        if (t._schema) {
+            return t._schema;
+        } else {
+            var rawSchema = t._configurator.get().schema;
+            
+            t._schema = {};
+            for (var entity in rawSchema) {
+                var arr = [];
+                var e = rawSchema[entity];
+                for (var i = 0; i < e.fields.length; i++) {
+                    arr.push({
+                        name: e.fields[i],
+                        'type': e.types[i],
+                        width: e.inputSizes[i]
+                    });
+                }
+                t._schema[entity] = arr;
+            }
+            
+            return t._schema;
+        }
+    }
+    
 //====================================================================================================
 //====================================================================================================
 
@@ -276,9 +306,9 @@ var Lib = (function(){
     //    return Date.now()*1000 + Math.floor(Math.random()*1000).toString;
     //}
     
-    function Record(record, dbManager, schema) {
+    function Record(record, dbManager, rawEntitySchema) {
         var t = this;
-        t._schema = schema;
+        t._schema = rawEntitySchema;
         t._dbm = dbManager;
         t._record = record || null;
         t._fieldToIndex = {};
@@ -337,12 +367,13 @@ var Lib = (function(){
         return record;
     }
 
-    Record.prototype._rowsToRecordSet = function (rows, startId) {
+    Record.prototype._rowsToRecordSet = function (rows, startOffset) {
         var t = this, 
             base = t._dbm.baseRow();
+        startOffset = startOffset || 0;
         var records = [];
         for (var i = 0; i < rows.length; i++) {
-            records.push(t._rowToRecord(rows[i], base + startId + i));
+            records.push(t._rowToRecord(rows[i], base + startOffset + i));
         }
         return records;
     }
@@ -356,14 +387,16 @@ var Lib = (function(){
     /**
      * searches by field values equality
      * @param recordCriteria - {fieldName: value, fieldName: value}
+     * @param startOffset
+     * @param limit
      */
-    Record.prototype.select = function (recordCriteria) {
+    Record.prototype.select = function (recordCriteria, startOffset, limit) {
         var t = this, criteria = {};
         for (var c in recordCriteria) {
             criteria[t._fieldToIndex[c]] = recordCriteria[c];
         }
         
-        return t._rowsToRecordSet(t._dbm.selectRows(criteria));
+        return t._rowsToRecordSet(t._dbm.selectRows(criteria, startOffset, limit), startOffset);
     }
 //====================================================================================================
 //====================================================================================================
@@ -464,17 +497,24 @@ var Lib = (function(){
     }
 
     /**
-     * 
+     *
      * @param criteria - {index: value, index2: value2...}
+     * @param startOffset
+     * @param limit
      */
-    DBManager.prototype.selectRows = function (criteria) {
-        var t = this;
-        var rows = [];
+    DBManager.prototype.selectRows = function (criteria, startOffset, limit) {
+        var t = this,
+            rows = [],
+            matches = 0;
+            
+        limit = limit || 1e+20;
+        startOffset = startOffset || 0;
+        
         var values = t._range.getValues();
-        var l = Object.keys(criteria).length;
+        var criteriaNumber = Object.keys(criteria).length;
         
         for (var i = 0; i < values.length; i++) {
-            if (l) {
+            if (criteriaNumber) {
                 var matched = true;
                 for (var c in criteria) {
                     if (values[i][c].indexOf(criteria[c]) === -1) {
@@ -484,7 +524,11 @@ var Lib = (function(){
                 }
                 if (! matched) continue;
             }
-            rows.push(values[i]);
+            matches++;
+            if (matches >= startOffset) {
+                rows.push(values[i]);
+                if (rows.length >= limit) break;
+            }
         }
         return rows;
     }
@@ -746,8 +790,10 @@ var Lib = (function(){
         DBManager: DBManager,
         Importer: Importer,
         Record: Record,
-        
+        Schema: Schema,
     };
 })();    
 
+//lazy loading global singletones - will evaluate only on get() methods
 var configurator = new Lib.Configurator();
+var theSchema = new Lib.Schema(configurator);

@@ -517,7 +517,7 @@ var Lib = (function(){
             if (criteriaNumber) {
                 var matched = true;
                 for (var c in criteria) {
-                    if (values[i][c].indexOf(criteria[c]) === -1) {
+                    if (values[i][c].toString().indexOf(criteria[c]) === -1) {
                         matched = false;
                         break;
                     }

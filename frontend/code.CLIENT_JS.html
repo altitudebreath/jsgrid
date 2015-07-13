@@ -31,7 +31,7 @@
     Notifier.SUCCESS = 'success';
     
     
-    Notifier.prototype.flash = function (messageType, title, message) {
+    Notifier.prototype.flash = function (messageType, title, message, successTimeout) {
         var t = this;
         var flash = t._flashOrig.clone();
         alterPrefixedClass(flash, t._styleClassPrefix, messageType);
@@ -39,10 +39,10 @@
         flash.find('.flash_title').text(title);
         t._flashContainer.append(flash);
         flash.show();
-        if (t._successTimeout){
+        if (t._successTimeout || successTimeout){
             setTimeout(function () {
                         flash.fadeOut(500, function(){$(this).remove()});
-                }, t._successTimeout
+                }, (t._successTimeout || successTimeout)
             )
         }
     }
@@ -67,7 +67,7 @@
         var parsedResult = JSON.parse(result).result;
         console.log(parsedResult);
         
-        notifier.flash(Notifier.SUCCESS, 'Success', 'DONE!');
+        notifier.flash(Notifier.SUCCESS, 'Success', 'DONE!', 5000);
         notifier.busy(false);
         
         env.deferred.resolve(parsedResult);
@@ -97,7 +97,7 @@
         var d = $.Deferred();
         env = env || {};
         env.deferred = d;
-        console.log("action handler called.");
+
         notifier.clearFlash();
         notifier.busy(true);
 

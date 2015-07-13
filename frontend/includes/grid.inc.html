@@ -2,11 +2,11 @@
 <!--<link type="text/css" rel="stylesheet" href="jsgrid-theme.min.css" />-->
 <script type="text/javascript" src="//rawgit.com/tabalinas/jsgrid/master/dist/jsgrid.js"></script>
 <script>
-    var MyDateField = function(config) {
+    var DateField = function(config) {
         jsGrid.Field.call(this, config);
     };
  
-    MyDateField.prototype = new jsGrid.Field({
+    DateField.prototype = new jsGrid.Field({
         sorter: function(date1, date2) {
             return new Date(date1) - new Date(date2);
         },
@@ -34,11 +34,12 @@
  
     function initGrid(params){
         params.common = params.common || {};
-        jsGrid.fields.date = MyDateField;
+        
+        jsGrid.fields.date = DateField;
 
         $("#data-grid").jsGrid({
-                height: "80%",
-                width: "100%",
+                height: "100%",
+                width: "auto",
          
                 filtering: true,
                 editing: true,

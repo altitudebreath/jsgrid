@@ -19,22 +19,22 @@
         </div>
         <div class="navbar-collapse collapse navbar-warning-collapse">
             <ul class="nav navbar-nav">
-                <li class="<?= C.isMe('app_home', 'active') ?>"><a href="<?= C.getUrl('app_home') ?>">Home</a></li>
-                <li class="dropdown">
-                    <a href="#" data-target="#" class="dropdown-toggle" data-toggle="dropdown">Settings
-                        <b class="caret"></b></a>
-                    <ul class="dropdown-menu">
-                        <li><a href="<?= C.getUrl('app_booking-import') ?>">Import Bookings</a></li>
-                    </ul>
-                </li>
+                <li class="<?= C.isMe('app_home', 'active') ?>"><a href="<?= C.getUrl('app_home') ?>">Dashboard</a></li>
+                <!--<li class="dropdown">-->
+                    <!--<a href="#" data-target="#" class="dropdown-toggle" data-toggle="dropdown">Settings-->
+                        <!--<b class="caret"></b></a>-->
+                    <!--<ul class="dropdown-menu">-->
+                    <!--</ul>-->
+                <!--</li>-->
                 <li class="dropdown">
                     <a href="#" data-target="#" class="dropdown-toggle" data-toggle="dropdown"><strong>Admin</strong> <b class="caret"></b></a>
                     <ul class="dropdown-menu">
-                        <li class="<?= C.isMe('admin_home', 'active') ?>"><a href="<?= C.getUrl('admin_home') ?>">Dashboard</a></li>
+                        <li class="<?= C.isMe('admin_home', 'active') ?>"><a href="<?= C.getUrl('admin_home') ?>">Settings</a></li>
+                        <li class="<?= C.isMe('admin_booking-import', 'active') ?>"><a href="<?= C.getUrl('admin_booking-import') ?>">Load Bookings Manually</a></li>
                     </ul>
                 </li>
             </ul>
-            <form class="navbar-form navbar-left">
+            <form class="navbar-form navbar-right">
                 <input type="text" class="form-control col-lg-8" placeholder="Search">
             </form>
             
@@ -58,6 +58,7 @@
             <ul class="nav nav-pills nav-stacked">
                 <li class="<?= C.isMe('app_bookings', 'active') ?>"><a href="<?= C.getUrl('app_bookings') ?>"><i class="mdi-action-assignment-turned-in"></i>Bookings</a></li>
                 <li class="<?= C.isMe('app_availability', 'active') ?>"><a href="<?= C.getUrl('app_availability') ?>"><i class="mdi-editor-insert-invitation"></i>Availability</a></li>
+                <li class="<?= C.isMe('app_availability-views', 'active') ?>"><a href="<?= C.getUrl('app_availability-views') ?>"><i class="mdi-editor-insert-invitation"></i>Availability Views</a></li>
                 <li class="<?= C.isMe('app_list-management', 'active') ?>"><a href="<?= C.getUrl('app_home') ?>"><i class="mdi-editor-format-list-bulleted"></i>List Management</a></li>
             </ul>
         </div>
@@ -72,7 +73,7 @@
             <div id="flash-container"></div>
 
             <!-- Use a templated HTML printing scriptlet to import JavaScript. -->
-            <?!= HtmlService.createHtmlOutputFromFile('code.js').getContent(); ?>
+            <?!= HtmlService.createHtmlOutputFromFile('code.CLIENT_JS').getContent(); ?>
 
             <div id="view"><?!= viewContent ?></div>
         </div>

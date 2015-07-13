@@ -1,5 +1,3 @@
-var DEBUG = false;
-
 //CONSTANTS needs to be available where spreadsheet is not accessible (yet)
 //cannot be moved to sheet-based parameters
 var CONSTANTS = {

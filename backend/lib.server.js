@@ -15,7 +15,15 @@ var Lib = (function(){
     function isObject(obj) {
         return Object.prototype.toString.call(obj) === '[object Object]';
     }
+    
+    function escapeRegExp(str) {
+           return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+    }
 
+    function makeRegex(pre, text, post) {
+        return new RegExp(pre + escapeRegExp(text) + post);
+    }
+    
     function log(msg, data) {
         if (data) {
             var d = {};
@@ -150,7 +158,7 @@ var Lib = (function(){
             'date': function(val){return new Date(val);},
             'list': function(val, splitter){
                 return val.toString()
-                    .split(new RegExp('\\s*' + splitter + '\\s*'));
+                    .split(makeRegex('\\s*', splitter, '\\s*'));
             },
             'array': function(val, terminator, row){
                 return row.slice(0, row.indexOf(terminator || ""));
@@ -174,14 +182,17 @@ var Lib = (function(){
             var params = {};
             for (var i = CONSTANTS.PARAM_ROWS_STARTS_FROM - 1; i < values.length; i++){
                 var row = values[i];
-                walkNamespace(params, row[CONSTANTS.PARAM_NAME_POSITION - 1], 
-                    t._getByType(
-                        row.slice(CONSTANTS.PARAM_VALUE_POSITION - 1),
-                        row[CONSTANTS.PARAM_VALUE_POSITION - 1], 
-                        row[CONSTANTS.PARAM_TYPE_POSITION - 1],
-                        row[CONSTANTS.ITEMS_SPLITTER_POSITION - 1]
-                    )
-                );
+                var name = row[CONSTANTS.PARAM_NAME_POSITION - 1];
+                if (name) {
+                    walkNamespace(params, name,
+                        t._getByType(
+                            row.slice(CONSTANTS.PARAM_VALUE_POSITION - 1),
+                            row[CONSTANTS.PARAM_VALUE_POSITION - 1],
+                            row[CONSTANTS.PARAM_TYPE_POSITION - 1],
+                            row[CONSTANTS.ITEMS_SPLITTER_POSITION - 1]
+                        )
+                    );
+                }
             }
             t._instance = params;//extend({}, params, CONSTANTS); 
             
@@ -310,21 +321,29 @@ var Lib = (function(){
         return arr;
     }
 
+    /**
+     * 
+     * @param row
+     * @param id - is a native row number on a sheet
+     * @returns {{}}
+     * @private
+     */
     Record.prototype._rowToRecord = function (row, id) {
         var t = this;
         var record = {};
         for (var i = 0; i < row.length; i++) {
             record[t._schema.fields[i]] = row[i];
         }
-        if (id) record.__UID = id;
+        if (typeof id !== UNDEF) record.__UID = id;
         return record;
     }
 
     Record.prototype._rowsToRecordSet = function (rows, startId) {
-        var t = this;
+        var t = this, 
+            base = t._dbm.baseRow();
         var records = [];
         for (var i = 0; i < rows.length; i++) {
-            records.push(t._rowToRecord(rows[i], startId + i));
+            records.push(t._rowToRecord(rows[i], base + startId + i));
         }
         return records;
     }
@@ -368,6 +387,10 @@ var Lib = (function(){
         t._dim = t._initActualRange();
     }
 
+    DBManager.prototype.baseRow = function () {
+        return this._dim.row;
+    }
+    
     DBManager.prototype._initActualRange = function () {
         var t = this;
         t._range = t._sheet.getRange(
@@ -403,8 +426,7 @@ var Lib = (function(){
     DBManager.prototype.updateRows = function (startOffset, data) {
         var t = this;
         t._checkConstraints(data);
-        t._sheet.getRange(startOffset + t._dim.row, 
-            t._dim.col, data.length, t._dim.width).setValues(data);
+        t._subset(startOffset, data.length).setValues(data);
         return true;
     }
     /**
@@ -559,7 +581,7 @@ var Lib = (function(){
         var emailToCheck = userEmail ? userEmail : t._runningUser;
         
         //just need to check if user has access at all (is in ALL group)
-        return t._params['role.' + CONSTANTS.ROLE_ALL].indexOf(emailToCheck) !== -1;
+        return t._params.role[CONSTANTS.ROLE_ALL].indexOf(emailToCheck) !== -1;
 
     }    
     
@@ -572,11 +594,7 @@ var Lib = (function(){
         //return after having found the first role permitting this page
         for (var role in CONSTANTS.ROLE) {
             //log('role', role);
-            //log('emailToCheck', emailToCheck);
-            //log("t._params['role.' + role] = ", t._params['role.' + role]);
-            //log('CONSTANTS.ROLE[role].allowedPrefixes = ', CONSTANTS.ROLE[role].allowedPrefixes);
-            //log('page.getPrefix()', page.getPrefix());
-            if (t._params['role.' + role].indexOf(emailToCheck) !== -1 &&
+            if (t._params.role[role].indexOf(emailToCheck) !== -1 &&
                 CONSTANTS.ROLE[role].allowedPrefixes.indexOf(page.getPrefix()) !== -1 
             ){
                 return true;

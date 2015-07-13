@@ -280,7 +280,6 @@ var Lib = (function(){
         var t = this;
         t._schema = schema;
         t._dbm = dbManager;
-        t._options = options;
         t._record = record || null;
         t._fieldToIndex = {};
         for (var i=0; i< t._schema.fields.length; i++){
@@ -472,14 +471,22 @@ var Lib = (function(){
         var t = this;
         var rows = [];
         var values = t._range.getValues();
+        var l = Object.keys(criteria).length;
+        
         for (var i = 0; i < values.length; i++) {
-            for (var c in criteria){
-                if (values[i][c].indexOf(criteria[c]) !== -1){
-                    rows.push(values[i]);
+            if (l) {
+                var matched = true;
+                for (var c in criteria) {
+                    if (values[i][c].indexOf(criteria[c]) === -1) {
+                        matched = false;
+                        break;
+                    }
                 }
+                if (! matched) continue;
             }
+            rows.push(values[i]);
         }
-        return null;
+        return rows;
     }
     
 //====================================================================================================

@@ -8,7 +8,7 @@
 <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.3.0/js/material.min.js"></script>
 
 <script>
-    console.log('--BEGIN--');  //do NOT remove, to find the proper script in Dev Tools
+    console.log('-- code.CLIENT_JS ------->');  //do NOT remove, to find the proper script in Dev Tools
 
     function alterPrefixedClass(jq, prefix, newValue){
         var cls = jq.attr('class');
@@ -63,10 +63,12 @@
     function onSuccessWrapper(result, env) {
         if (!result) return; //this is a callback NOT from business logic endpoints, like UI dialog...
 
+        var parsedResult = JSON.parse(result).result;
+        
         notifier.flash(Notifier.SUCCESS, 'Success', 'DONE!');
         notifier.busy(false);
         
-        env.deferred.resolve(result);
+        env.deferred.resolve(parsedResult);
     }
 
     function onErrorWrapper(error, env) {

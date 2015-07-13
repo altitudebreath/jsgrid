@@ -73,6 +73,7 @@
             <div id="flash-container"></div>
 
             <!-- Use a templated HTML printing scriptlet to import JavaScript. -->
+            <script>var DEBUG = <?!= DEBUG ?></script>
             <?!= HtmlService.createHtmlOutputFromFile('code.CLIENT_JS').getContent(); ?>
 
             <div id="view"><?!= viewContent ?></div>

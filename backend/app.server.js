@@ -70,7 +70,9 @@ function runAction(entity, operation, actionParams){
         }catch(e){
             throw Error("Wrong Entity or Operation: " + entity + ', ' + operation);
         }
-        return func(actionParams, conf);
+        var rawResult = func(actionParams, conf);
+        return JSON.stringify({result: rawResult});
+        
     }catch(e){
         var tr = Lib.trace(e);
         Logger.log(tr);

@@ -1,7 +1,5 @@
-<div class="jumbotron">
-    <h1>Current Availability</h1>
-    <div id="data-grid"></div>
-</div>
+<h1>Current Availability</h1>
+<div id="data-grid"></div>
 <?!= HtmlService.createHtmlOutputFromFile('Grid.CLIENT_JS').getContent(); ?>
 <script>
     var schema = <?!=C.schema ?>;
@@ -10,6 +8,8 @@
         initGrid({
             entity: 'availability',
             fields: schema,
+            editing: true,
+            inserting: true,
         })
     });
 </script>

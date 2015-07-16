@@ -1,7 +1,6 @@
-<div class="jumbotron">
-    <h1>Bookings</h1>
-    <div id="data-grid"></div>
-</div>
+<h1>Bookings</h1>
+<div id="data-grid"></div>
+
 <?!= HtmlService.createHtmlOutputFromFile('Grid.CLIENT_JS').getContent(); ?>
 <script>
     var schema = <?!= C.schema ?>;

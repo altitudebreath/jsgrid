@@ -4,7 +4,7 @@ function doGet(e) {
 
         var auth = new Lib.Auth(conf);
         
-        var r = new Lib.Renderer(conf.app_title, "index", 'C', { //base context
+        var r = new Lib.Renderer(conf.app_title, "INDEX", 'C', { //base context
             title: conf.app_title,
             
             auth: auth,

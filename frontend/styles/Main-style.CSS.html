@@ -1,6 +1,7 @@
 <!--<link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons.css">-->
 <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css">
-<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+<!--<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">-->
+<link href="//altitudebreath.github.io/jsgrid/css/bootstrap.min.css" rel="stylesheet">
 <style>
     /*Include roboto.css to use the Roboto web font, material.css to include the theme and ripples.css to style the ripple effect */
     /*<!-- New Google's RobotoDraft font-->*/
@@ -10,17 +11,14 @@
 <link href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.3.0/css/material.min.css" rel="stylesheet">
 <link href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.3.0/css/ripples.min.css" rel="stylesheet">
 
+<link href="//altitudebreath.github.io/jsgrid/css/tcal.css" rel="stylesheet" type="text/css">
+    
 <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
 
 <link href="//altitudebreath.github.io/jsgrid/css/simple-sidebar.css" rel="stylesheet">
 
 <!--user styles-->
 <style>
-    [class^=mdi-] {
-      font-size: 1.1em;
-      padding: 0 7px;
-    }
-    
     .flash-message *{
         font-weight: bold !important;
     }
@@ -87,8 +85,102 @@
        }
     
     /*******************************************************************************************/
-    
-    
+    body { 
+  			background: #eff0f3; 
+  		}
+  		p {
+  			padding-right:20px;
+  		}
+  		.container-fluid {
+  			min-width:320px;
+  			}
+  		.break {
+  			/* Be VERY careful with this, breaks normal words wh_erever */
+  			word-break: break-all;
+  		}
+  
+  		.flex-video {
+  			position: relative;
+  			padding-top: 25px;
+  			padding-bottom: 67.5%;
+  			height: 0;
+  			margin-bottom: 16px;
+  			overflow: hidden;
+  		}
+  			 
+  			.flex-video.widescreen { padding-bottom: 57.25%; }
+  			.flex-video.vimeo { padding-top: 0; }
+  			 
+  			.flex-video iframe,
+  			.flex-video object,
+  			.flex-video embed {
+  			position: absolute;
+  			top: 0;
+  			left: 0;
+  			width: 100%;
+  			height: 100%;
+  		}
+  			@media only screen and (max-device-width: 800px), only screen and (device-width: 1024px) and (device-height: 600px), only screen and (width: 1280px) and 
+  			(orientation: landscape), only screen and (device-width: 800px), only screen and (max-width: 767px) {
+  			.flex-video { padding-top: 0; }
+  		}
+  		
+  		.dropdown-submenu {
+  			position: relative;
+  			font-family: sans-serif;
+  			font-size:8px;
+  		}
+  		.dropdown-menu > li > a {
+  			font-family: sans-serif;
+  			font-size:14px;
+  		}
+  
+  		.dropdown-submenu>.dropdown-menu {
+  			top: 0;
+  			left: 100%;
+  			margin-top: -6px;
+  			margin-left: -1px;
+  			-webkit-border-radius: 0 6px 6px 6px;
+  			-moz-border-radius: 0 6px 6px;
+  			border-radius: 0 6px 6px 6px;
+  			
+  		}
+  
+  		.dropdown-submenu:hover>.dropdown-menu {
+  			display: block;
+  		}
+  		.dropdown-submenu>a:after {
+  			display: block;
+  			content: " ";
+  			float: right;
+  			width: 0;
+  			height: 0;
+  			border-color: transparent;
+  			border-style: solid;
+  			border-width: 5px 0 5px 5px;
+  			border-left-color: #ccc;
+  			margin-top: 5px;
+  			margin-right: -10px;
+  		}
+  
+  		.dropdown-submenu:hover>a:after {
+  			border-left-color: #fff;
+  		}
+  
+  		.dropdown-submenu.pull-left {
+  			float: none;
+  		}
+  
+  		.dropdown-submenu.pull-left>.dropdown-menu {
+  			left: -100%;
+  			margin-left: 10px;
+  			-webkit-border-radius: 6px 0 6px 6px;
+  			-moz-border-radius: 6px 0 6px 6px;
+  			border-radius: 6px 0 6px 6px;
+  		}    
+    /**********************************************************************************************/
+    /************************************ Grid **********************************************************/
+    /**********************************************************************************************/
     #data-grid {
     }
     

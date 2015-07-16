@@ -5,134 +5,154 @@
     <?!= HtmlService.createHtmlOutputFromFile('Main-style.CSS').getContent(); ?>
 
 </head>
-<div>
-<!-- Your site -->
-<div class="navbar navbar-warning">
-    <div class="navbar-header">
-        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-warning-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-        </button>
-        <a class="navbar-brand" href="<?= C.getUrl('app_home') ?>"><?= C.title ?></a>
+<body>
+    <!--<nav class="navbar navbar-default navbar navbar-fixed-top">-->
+    <!--&lt;!&ndash; Brand and toggle get grouped for better mobile display &ndash;&gt;-->
+                <!--<div class="navbar-header fixed-brand">-->
+                    <!--<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" id="menu-toggle">-->
+                      <!--<span class="glyphicon glyphicon-th-large" aria-hidden="true"></span>-->
+                    <!--</button>-->
+                    <!--<a class="navbar-brand" href="#"><i class="fa fa-rocket fa-4"></i> KTi PRO-KIT</a>-->
+                <!--</div>&lt;!&ndash; navbar-header&ndash;&gt;-->
+ <!-- -->
+                <!--<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">-->
+                            <!--<ul class="nav navbar-nav">-->
+                                <!--<li class="active"><button class="navbar-toggle collapse in" data-toggle="collapse" id="menu-toggle-2"> <span class="glyphicon glyphicon-th-large" aria-hidden="true"></span></button></li>-->
+                            <!--</ul>-->
+                <!--</div>&lt;!&ndash; bs-example-navbar-collapse-1 &ndash;&gt;-->
+    <!--</nav>-->
+    <!-- Your site -->
+    <div class="navbar navbar-warning navbar-fixed-top">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-warning-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <!--<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">-->
+                        <!--<ul class="nav navbar-nav">-->
+                            <!--<li class="active"><button class="navbar-toggle collapse in" data-toggle="collapse" id="menu-toggle-2"> <span class="glyphicon glyphicon-th-large" aria-hidden="true"></span></button></li>-->
+                        <!--</ul>-->
+            <!--</div>&lt;!&ndash; bs-example-navbar-collapse-1 &ndash;&gt;-->
+            <a class="navbar-brand" href="<?= C.getUrl('app_home') ?>"><i class="fa fa-rocket fa-4"></i><?= C.title ?></a>
+        </div>
+        <div class="navbar-collapse collapse navbar-warning-collapse">
+            <ul class="nav navbar-nav">
+                <li class="<?= C.isMe('app_home', 'active') ?>"><a href="<?= C.getUrl('app_home') ?>">Dashboard</a></li>
+                <!--<li class="dropdown">-->
+                    <!--<a href="#" data-target="#" class="dropdown-toggle" data-toggle="dropdown">Settings-->
+                        <!--<b class="caret"></b></a>-->
+                    <!--<ul class="dropdown-menu">-->
+                    <!--</ul>-->
+                <!--</li>-->
+                <li class="dropdown">
+                    <a href="#" data-target="#" class="dropdown-toggle" data-toggle="dropdown"><strong>Admin</strong> <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                        <li class="<?= C.isMe('admin_home', 'active') ?>"><a href="<?= C.getUrl('admin_home') ?>">Settings</a></li>
+                        <li class="<?= C.isMe('admin_booking-import', 'active') ?>"><a href="<?= C.getUrl('admin_booking-import') ?>">Load Bookings Manually</a></li>
+                    </ul>
+                </li>
+            </ul>
+            <form class="navbar-form navbar-right">
+                <input type="text" class="form-control col-lg-8" placeholder="Search">
+            </form>
+            
+            <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown">
+                    <a href="#" data-target="#" class="dropdown-toggle" data-toggle="dropdown"><i
+                            class="mdi-social-person"></i> <?= C.auth.getEmail() ?> <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="javascript:void(0)">Profile</a></li>
+                        <li><a href="https://www.google.com/accounts/Logout?continue=<?= C.page.getUrl() ?>">Sign Out
+                            (Google)</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
     </div>
-    <div class="navbar-collapse collapse navbar-warning-collapse">
-        <ul class="nav navbar-nav">
-            <li class="<?= C.isMe('app_home', 'active') ?>"><a href="<?= C.getUrl('app_home') ?>">Dashboard</a></li>
-            <!--<li class="dropdown">-->
-                <!--<a href="#" data-target="#" class="dropdown-toggle" data-toggle="dropdown">Settings-->
-                    <!--<b class="caret"></b></a>-->
-                <!--<ul class="dropdown-menu">-->
-                <!--</ul>-->
-            <!--</li>-->
-            <li class="dropdown">
-                <a href="#" data-target="#" class="dropdown-toggle" data-toggle="dropdown"><strong>Admin</strong> <b class="caret"></b></a>
-                <ul class="dropdown-menu">
-                    <li class="<?= C.isMe('admin_home', 'active') ?>"><a href="<?= C.getUrl('admin_home') ?>">Settings</a></li>
-                    <li class="<?= C.isMe('admin_booking-import', 'active') ?>"><a href="<?= C.getUrl('admin_booking-import') ?>">Load Bookings Manually</a></li>
-                </ul>
-            </li>
-        </ul>
-        <form class="navbar-form navbar-right">
-            <input type="text" class="form-control col-lg-8" placeholder="Search">
-        </form>
+    <!-- end navbar -->
+    <div id="wrapper">
+        <div id="sidebar-wrapper">
+            <ul class="sidebar-nav nav-pills nav-stacked" id="menu">
+                <li class="<?= C.isMe('app_home', 'active') ?>">
+                    <a href="<?= C.getUrl('app_home') ?>">
+                        <span class="fa-stack fa-lg pull-left"><i class="fa fa-dashboard fa-stack-1x "></i></span> Dashboard</a>
+                </li>
+                <li class="<?= C.isMe('app_bookings', 'active') ?>">
+                    <a href="<?= C.getUrl('app_bookings') ?>"><span class="fa-stack fa-lg pull-left"><i class="fa fa-check fa-stack-1x "></i></span>Bookings</a>
+                </li>
+                <li class="<?= C.isMe('app_availability', 'active') ?>">
+                    <a href="<?= C.getUrl('app_availability') ?>">
+                        <span class="fa-stack fa-lg pull-left"><i class="fa fa-flag fa-stack-1x "></i></span> Availability</a>
+                </li>
+                <li class="<?= C.isMe('app_availability-views', 'active') ?>">
+                    <a href="<?= C.getUrl('app_availability-views') ?>">
+                        <span class="fa-stack fa-lg pull-left"><i class="fa fa-cloud-download fa-stack-1x "></i></span>Availability Widgets</a>
+                </li>
+                <li class="<?= C.isMe('app_list-management', 'active') ?>">
+                    <a href="<?= C.getUrl('app_home') ?>">
+                        <span class="fa-stack fa-lg pull-left"><i class="fa fa-cart-plus fa-stack-1x "></i></span>List Management</a>
+                </li>
+                <li>
+                    <a href="#">
+                        <span class="fa-stack fa-lg pull-left"><i class="fa fa-youtube-play fa-stack-1x "></i></span>Email Manager</a>
+                </li>
+                <li class="active">
+                    <a href="tracking.html">
+                        <span class="fa-stack fa-lg pull-left"><i class="fa fa-wrench fa-stack-1x "></i></span>Campaign Tracking</a>
+                </li>
+                <li>
+                    <a href="reports.html">
+                        <span class="fa-stack fa-lg pull-left"><i class="fa fa-server fa-stack-1x "></i></span>Reports</a>
+                </li>
+                <hr style="width:90%;" />
+                <li><a href="#"><span class="fa-stack fa-lg pull-left"><i class="fa fa-flag fa-stack-1x "></i></span>Additional Tools
+                    </a><ul class="nav-pills nav-stacked" style="list-style-type: none; display: none;"><a href="#">
+                        </a><li><a href="#"></a><a href="mentions.html">MentionScanner</a></li>
+                        <li><a href="embed.html">&lt;Embed&gt;</a></li>
+                        <li><a href="#">FeedBack</a></li>
+                        <li><a href="coupon.html">Couponed</a></li>
+                        <li><a href="#">SocialPosts</a></li>
+                    </ul>
+                </li>
+                <hr style="width:90%;">
+                <li><a href="#"><span class="fa-stack fa-lg pull-left"><i class="fa fa-flag fa-stack-1x "></i></span>Settings
+                    </a><ul class="nav-pills nav-stacked" style="list-style-type: none; display: none;"><a href="#">
+                        </a><li><a href="#"></a><a href="#">Account Settings</a></li>
+                        <li><a href="#">Basic Tables</a></li>
+                        <li><a href="#">Templates</a></li>
+                    </ul>
+                </li>
+                <hr style="width:90%;">
+                <li><a href="#"><span class="fa-stack fa-lg pull-left"><i class="fa fa-server fa-stack-1x "></i></span>Sign Out</a></li>
+            </ul>
+        </div>
+    
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-12">
+                    <!-- this is just a template-->
+                    <div class="flash-message alert alert-dismissable alert-info" style="display: none">
+                        <button type="button" class="close" data-dismiss="alert">×</button>
+                        <h4 class="header flash_title"></h4>
         
-        <ul class="nav navbar-nav navbar-right">
-            <li class="dropdown">
-                <a href="#" data-target="#" class="dropdown-toggle" data-toggle="dropdown"><i
-                        class="mdi-social-person"></i> <?= C.auth.getEmail() ?> <b class="caret"></b></a>
-                <ul class="dropdown-menu">
-                    <li><a href="javascript:void(0)">Profile</a></li>
-                    <li><a href="https://www.google.com/accounts/Logout?continue=<?= C.page.getUrl() ?>">Sign Out
-                        (Google)</a></li>
-                </ul>
-            </li>
-        </ul>
-    </div>
-</div>
-<!-- end navbar -->
-<div id="wrapper">
-    <div id="sidebar-wrapper">
-        <ul class="sidebar-nav nav-pills nav-stacked" id="menu">
-            <li class="<?= C.isMe('app_home', 'active') ?>">
-                <a href="<?= C.getUrl('app_home') ?>">
-                    <span class="fa-stack fa-lg pull-left"><i class="fa fa-dashboard fa-stack-1x "></i></span> Dashboard</a>
-            </li>
-            <li class="<?= C.isMe('app_bookings', 'active') ?>">
-                <a href="<?= C.getUrl('app_bookings') ?>"><span class="fa-stack fa-lg pull-left"><i class="fa fa-check fa-stack-1x "></i></span>Bookings</a>
-            </li>
-            <li class="<?= C.isMe('app_availability', 'active') ?>">
-                <a href="<?= C.getUrl('app_availability') ?>">
-                    <span class="fa-stack fa-lg pull-left"><i class="fa fa-flag fa-stack-1x "></i></span> Availability</a>
-            </li>
-            <li class="<?= C.isMe('app_availability-views', 'active') ?>">
-                <a href="<?= C.getUrl('app_availability-views') ?>">
-                    <span class="fa-stack fa-lg pull-left"><i class="fa fa-cloud-download fa-stack-1x "></i></span>Availability Widgets</a>
-            </li>
-            <li class="<?= C.isMe('app_list-management', 'active') ?>">
-                <a href="<?= C.getUrl('app_home') ?>">
-                    <span class="fa-stack fa-lg pull-left"><i class="fa fa-cart-plus fa-stack-1x "></i></span>List Management</a>
-            </li>
-            <li>
-                <a href="#">
-                    <span class="fa-stack fa-lg pull-left"><i class="fa fa-youtube-play fa-stack-1x "></i></span>Email Manager</a>
-            </li>
-            <li class="active">
-                <a href="tracking.html">
-                    <span class="fa-stack fa-lg pull-left"><i class="fa fa-wrench fa-stack-1x "></i></span>Campaign Tracking</a>
-            </li>
-            <li>
-                <a href="reports.html">
-                    <span class="fa-stack fa-lg pull-left"><i class="fa fa-server fa-stack-1x "></i></span>Reports</a>
-            </li>
-            <hr style="width:90%;" />
-            <li><a href="#"><span class="fa-stack fa-lg pull-left"><i class="fa fa-flag fa-stack-1x "></i></span>Additional Tools
-                </a><ul class="nav-pills nav-stacked" style="list-style-type: none; display: none;"><a href="#">
-                    </a><li><a href="#"></a><a href="mentions.html">MentionScanner</a></li>
-                    <li><a href="embed.html">&lt;Embed&gt;</a></li>
-                    <li><a href="#">FeedBack</a></li>
-                    <li><a href="coupon.html">Couponed</a></li>
-                    <li><a href="#">SocialPosts</a></li>
-                </ul>
-            </li>
-            <hr style="width:90%;">
-            <li><a href="#"><span class="fa-stack fa-lg pull-left"><i class="fa fa-flag fa-stack-1x "></i></span>Settings
-                </a><ul class="nav-pills nav-stacked" style="list-style-type: none; display: none;"><a href="#">
-                    </a><li><a href="#"></a><a href="#">Account Settings</a></li>
-                    <li><a href="#">Basic Tables</a></li>
-                    <li><a href="#">Templates</a></li>
-                </ul>
-            </li>
-            <hr style="width:90%;">
-            <li><a href="#"><span class="fa-stack fa-lg pull-left"><i class="fa fa-server fa-stack-1x "></i></span>Sign Out</a></li>
-        </ul>
-    </div>
-
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-lg-12">
-                <!-- this is just a template-->
-                <div class="flash-message alert alert-dismissable alert-info" style="display: none">
-                    <button type="button" class="close" data-dismiss="alert">×</button>
-                    <h4 class="header flash_title"></h4>
-    
-                    <p class="message flash_text"></p>
+                        <p class="message flash_text"></p>
+                    </div>
+                    <div id="flash-container"></div>
+        
+                    <!-- Use a templated HTML printing scriptlet to import JavaScript. -->
+                    <script>var DEBUG = <?!= DEBUG ?></script>
+                    <?!= HtmlService.createHtmlOutputFromFile('Main-code.CLIENT_JS').getContent(); ?>
+        
+                    <div id="view"><?!= viewContent ?></div>
                 </div>
-                <div id="flash-container"></div>
-    
-                <!-- Use a templated HTML printing scriptlet to import JavaScript. -->
-                <script>var DEBUG = <?!= DEBUG ?></script>
-                <?!= HtmlService.createHtmlOutputFromFile('Main-code.CLIENT_JS').getContent(); ?>
-    
-                <div id="view"><?!= viewContent ?></div>
             </div>
         </div>
     </div>
-</div>
-    
-<div id="spinner-overlay" style="display: none">
-    <div class="spinner"></div>
-</div>
+        
+    <div id="spinner-overlay" style="display: none">
+        <div class="spinner"></div>
+    </div>
 
 </body>
 </html>

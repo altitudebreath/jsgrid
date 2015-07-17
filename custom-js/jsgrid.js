@@ -1522,6 +1522,8 @@
 
     TextField.prototype = new Field({
 
+        constructor: TextField,
+        
         autosearch: true,
 
         filterTemplate: function() {
@@ -1591,6 +1593,8 @@
 
     NumberField.prototype = new TextField({
 
+        constructor: NumberField,
+        
         sorter: "number",
         align: "right",
 
@@ -1625,6 +1629,8 @@
 
     TextAreaField.prototype = new TextField({
 
+        constructor: TextAreaField,
+        
         insertTemplate: function() {
             if(!this.inserting)
                 return "";
@@ -1672,6 +1678,8 @@
 
     SelectField.prototype = new NumberField({
 
+        constructor: SelectField,
+        
         align: "center",
         valueType: "number",
 
@@ -1779,6 +1787,8 @@
 
     CheckboxField.prototype = new Field({
 
+        constructor: CheckboxField,
+        
         sorter: "number",
         align: "center",
         autosearch: true,
@@ -1878,6 +1888,8 @@
     }
 
     ControlField.prototype = new Field({
+        constructor: ControlField,
+        
         css: "jsgrid-control-field",
         align: "center",
         width: 50,
